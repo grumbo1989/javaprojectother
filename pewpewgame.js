@@ -14,12 +14,17 @@ var upPressed = false
 var leftPressed = false
 var downPressed = false
 var rightPressed = false
-var playerXSpeed = 13
-var playerYSpeed = 13
+var playerSpeed = 13
 var facingDirection = "up"
 var count = 0
-var dashCooldown = 0
+var dashTimer = 0 
+var attackSpeed = 1
+var dashSpeed = 1 //how fast you move when dashing
+var dashCooldown = 1 //time between dashes
+
 //arrays
+//enemies
+var monster1Array = []
 //canvas setup
 window.onload=startCanvas
 function startCanvas(){
@@ -32,22 +37,24 @@ function startCanvas(){
 function updateCanvas(){
 	ctx.fillStyle = "white"
 	ctx.fillRect(0,0,WIDTH,HEIGHT)
-	if(dashCooldown > 0){
-		dashCooldown--
+	if(dashTimer > 0){
+		dashTimer--
 	}
 	if(upPressed == true){
-		Player.yPos -= playerYSpeed
+		Player.yPos -= playerSpeed
 	}
 	if(leftPressed == true){
-		Player.xPos -= playerXSpeed
+		Player.xPos -= playerSpeed
 	}
 	if(downPressed == true){
-		Player.yPos += playerYSpeed
+		Player.yPos += playerSpeed
 	}
 	if(rightPressed == true){
-		Player.xPos += playerXSpeed
+		Player.xPos += playerSpeed
 	}
 	drawPlayer()
+	checkMonsters()
+	drawMonsters()
 }
 //player stuff 
 class Player{
@@ -57,7 +64,7 @@ class Player{
 	}
 }
 function drawPlayer(){
-	if(dashCooldown == "0"){
+	if(dashTimer == "0"){
 	ctx.fillStyle = "#800000"
 	}else{
 		ctx.fillStyle = "#4169E1"
@@ -138,7 +145,7 @@ function keyDownFunction(keyboardEvent){
 		rightPressed = true
 		facingDirection = "right"
 	}
-	if (keyDown=="f" && dashCooldown == "0"){
+	if (keyDown=="f" && dashTimer == "0"){
 		dash()
 	}
 }
@@ -159,7 +166,7 @@ function keyUpFunction(keyboardEvent){
 	}
 }
 function dash(){
-		dashCooldown = 20
+		dashTimer = 20 - dashCooldown
 		if(facingDirection == "up"){
 			count = 0
 			while(count < 8){
@@ -193,4 +200,25 @@ function dash(){
 				count++
 			}
 		}
+}
+//monsters 
+class Monster1{
+	constructor(monster1X,monster1Y,monster1Health,monster1Size){
+		this.xPos = monster1X
+		this.yPos = monster1Y
+		this.hp = monster1Health
+		this.size = monster1Size
 	}
+}
+function drawMonsters(){
+	checkNumber = 0
+	while(checkNumber < monster1Array.length){
+		ctx.beginPath()
+		ctx.arc(monster1Array[checkNumber].xPos,monster1Array[checkNumber].yPos, monster1Array[checkNumber].size, 0, 2*Math.PI)
+		ctx.fill()
+		checkNumber++
+	}
+}
+function checkMonsters(){
+
+}
