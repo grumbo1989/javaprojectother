@@ -32,6 +32,9 @@ function startCanvas(){
 	timer = setInterval(updateCanvas, 50)
 	Player.xPos = 50
 	Player.yPos = 50
+	monster1Array.push(new Monster1(300,400,50,30))
+	monster1Array.push(new Monster1(500,200,3,20))
+	monster1Array.push(new Monster1(400,600,5,14))
 }	
 //update canvas
 function updateCanvas(){
@@ -213,6 +216,7 @@ class Monster1{
 function drawMonsters(){
 	checkNumber = 0
 	while(checkNumber < monster1Array.length){
+		ctx.fillStyle = "#2F4F4F"
 		ctx.beginPath()
 		ctx.arc(monster1Array[checkNumber].xPos,monster1Array[checkNumber].yPos, monster1Array[checkNumber].size, 0, 2*Math.PI)
 		ctx.fill()
@@ -220,5 +224,11 @@ function drawMonsters(){
 	}
 }
 function checkMonsters(){
-
+		checkNumber = 0
+	while(checkNumber < monster1Array.length){
+		if(monster1Array[checkNumber].health < 1){
+			monster1Array.splice(checkNumber,1)
+		}
+		checkNumber++
+	}
 }
