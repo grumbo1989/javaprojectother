@@ -1,7 +1,7 @@
 /**
 * date: 14/04/23
 * author: me
-* version: 0
+* version: 1.3
 vvv IMPORTANT: 
 figure out why that thing happens where directions only work after you have pressed upleft
 and then fix it
@@ -17,7 +17,7 @@ var leftPressed = false
 var downPressed = false
 var rightPressed = false
 var playerSpeed = 4
-var facingDirection 
+var facingDirection
 var count = 0
 var dashTimer = 0 
 var attackSpeed = 1
@@ -30,7 +30,8 @@ var spell1Size = 5
 var spell1Speed = 5
 var numProjectiles = 0
 var maxProjectiles = 500
-
+var debugInfoOn = 0
+var roomNum = 0
 //arrays
 //spells
 var spell1Array = []
@@ -51,8 +52,12 @@ function startCanvas(){
 function updateCanvas(){
 	ctx.fillStyle = "white"
 	ctx.fillRect(0,0,WIDTH,HEIGHT)
+	checkDirection()
 	if(dashTimer > 0){
 		dashTimer--
+	}
+	if(spell1Timer > 0){
+		spell1Timer--
 	}
 	if(upPressed == "true"){
 		Player.yPos -= playerSpeed
@@ -66,12 +71,16 @@ function updateCanvas(){
 	if(rightPressed == "true"){
 		Player.xPos += playerSpeed
 	}
+	if(debugInfoOn=="1"){
+		drawDebugInfo()
+	}
 	moveSpells()
+	checkSpells()
 	drawSpells()
 	drawPlayer()
 	checkMonsters()
 	drawMonsters()
-
+	
 }
 //player stuff 
 class Player{
@@ -112,7 +121,6 @@ function keyDownFunction(keyboardEvent){
 	
 	var keyDown = keyboardEvent.key
 	if (keyDown=="w"){
-		console.log("ehjgjg")
 		upPressed = "true"
 	}
 	if (keyDown=="a"){
@@ -124,12 +132,18 @@ function keyDownFunction(keyboardEvent){
 	if (keyDown=="d"){
 		rightPressed = "true"
 	}
-	checkDirection()
 	if (keyDown=="f" && dashTimer == "0"){
 		dash()
 	}
 	if (keyDown=="1" && spell1Timer == "0"){
 		spell1()
+	}
+	if (keyDown=="p"){
+		if(debugInfoOn=="1"){
+			debugInfoOn="0"
+		}else{
+			debugInfoOn="1"
+		}
 	}
 }
 window.addEventListener('keyup', keyUpFunction)
@@ -149,11 +163,10 @@ function keyUpFunction(keyboardEvent){
 	}
 }
 function dash(){
-		dashTimer = 20 - dashCooldown
+		dashTimer = 40 - dashCooldown
 		if(facingDirection == "up"){
 			count = 0
 			while(count < 8){
-				updateCanvas()
 				Player.yPos -= 15
 				count++
 			}
@@ -161,7 +174,6 @@ function dash(){
 		if(facingDirection == "upLeft"){
 			count = 0
 			while(count < 8){
-				updateCanvas()
 				Player.xPos -= 10
 				Player.yPos -= 10
 				count++
@@ -170,7 +182,6 @@ function dash(){
 		if(facingDirection == "left"){
 			count = 0
 			while(count < 8){
-				updateCanvas()
 				Player.xPos -= 15
 				count++
 			}
@@ -178,7 +189,6 @@ function dash(){
 		if(facingDirection == "downLeft"){
 			count = 0
 			while(count < 8){
-				updateCanvas()
 				Player.xPos -= 10
 				Player.yPos += 10
 				count++
@@ -187,7 +197,6 @@ function dash(){
 		if(facingDirection == "down"){
 			count = 0
 			while(count < 8){
-				updateCanvas()
 				Player.yPos += 15
 				count++
 			}
@@ -195,7 +204,6 @@ function dash(){
 		if(facingDirection == "downRight"){
 			count = 0
 			while(count < 8){
-				updateCanvas()
 				Player.xPos += 10
 				Player.yPos += 10
 				count++
@@ -204,8 +212,6 @@ function dash(){
 		if(facingDirection == "right"){
 			count = 0
 			while(count < 8){
-				updateCanvas()
-				console.log("ewqrqweqw")
 				Player.xPos += 15
 				count++
 			}
@@ -213,7 +219,6 @@ function dash(){
 		if(facingDirection == "upRight"){
 			count = 0
 			while(count < 8){
-				updateCanvas()
 				Player.xPos += 10
 				Player.yPos -= 10
 				count++
@@ -223,26 +228,19 @@ function dash(){
 function checkDirection(){
 	if(upPressed=="true" && rightPressed=="false" && leftPressed=="false" && downPressed=="false"){
 		facingDirection = "up"
-	}
-	if(upPressed=="true" && rightPressed=="false" && leftPressed=="true" && downPressed=="false"){
+	}else if(upPressed=="true" && rightPressed=="false" && leftPressed=="true" && downPressed=="false"){
 		facingDirection = "upLeft"
-	}
-	if(upPressed=="false" && rightPressed=="false" && leftPressed=="true" && downPressed=="false"){
+	}else if(upPressed=="false" && rightPressed=="false" && leftPressed=="true" && downPressed=="false"){
 		facingDirection = "left"
-	}
-	if(upPressed=="false" && rightPressed=="false" && leftPressed=="true" && downPressed=="true"){
+	}else if(upPressed=="false" && rightPressed=="false" && leftPressed=="true" && downPressed=="true"){
 		facingDirection = "downLeft"
-	}
-	if(upPressed=="false" && rightPressed=="false" && leftPressed=="false" && downPressed=="true"){
+	}else if(upPressed=="false" && rightPressed=="false" && leftPressed=="false" && downPressed=="true"){
 		facingDirection = "down"
-	}
-	if(upPressed=="false" && rightPressed=="true" && leftPressed=="false" && downPressed=="true"){
+	}else if(upPressed=="false" && rightPressed=="true" && leftPressed=="false" && downPressed=="true"){
 		facingDirection = "downRight"
-	}
-	if(upPressed=="false" && rightPressed=="true" && leftPressed=="false" && downPressed=="false"){
+	}else if(upPressed=="false" && rightPressed=="true" && leftPressed=="false" && downPressed=="false"){
 		facingDirection = "right"
-	}
-	if(upPressed=="true" && rightPressed=="true" && leftPressed=="false" && downPressed=="false"){
+	}else if(upPressed=="true" && rightPressed=="true" && leftPressed=="false" && downPressed=="false"){
 		facingDirection = "upRight"
 	}
 }
@@ -282,8 +280,9 @@ function checkMonsters(){
 }
 //spells
 function spell1(){
+	spell1Timer = 15
 	spell1Array.push(new Spell1Projectile(Player.xPos,Player.yPos, facingDirection))
-	console.log(facingDirection)
+	numProjectiles++
 }
 class Spell1Projectile{
 	constructor(spell1X, spell1Y, spell1Direction){
@@ -304,18 +303,28 @@ function drawSpells(){
 
 }
 function checkSpells(){
-
+	checkNumber = 0
+	while(checkNumber < spell1Array.length){
+		if(spell1Array[checkNumber].xPos > WIDTH + spell1Size || spell1Array[checkNumber].yPos > HEIGHT + spell1Size || spell1Array[checkNumber].xPos < 0 - spell1Size || spell1Array[checkNumber].yPos < 0 - spell1Size){
+			spell1Array.splice(checkNumber,1)
+			numProjectiles--
+		}
+		checkNumber++
+	}
+	while(numProjectiles > maxProjectiles){
+		spell1Array.splice(0,1)
+		numProjectiles--
+	}
 }
 function moveSpells(){
 	checkNumber = 0
 	while(checkNumber < spell1Array.length){
 		if(spell1Array[checkNumber].direction == "up"){
 			spell1Array[checkNumber].yPos -= spell1Speed
-			
 		}
 		if(spell1Array[checkNumber].direction == "upLeft"){
 			spell1Array[checkNumber].xPos -= spell1Speed
-			spell1Array[checkNumber].yPos -= spell1Speed
+			spell1Array[checkNumber].yPos -= spell1Speed 
 		}
 		if(spell1Array[checkNumber].direction == "left"){
 			spell1Array[checkNumber].xPos -= spell1Speed
@@ -340,4 +349,11 @@ function moveSpells(){
 		}
 		checkNumber++
 	}
+}
+//debug info
+function drawDebugInfo(){
+	console.log("debug info on")
+	ctx.font = "15px arial"
+	ctx.fillStyle = "black"
+	ctx.fillText(numProjectiles+" projectiles", 1100, 40)
 }
