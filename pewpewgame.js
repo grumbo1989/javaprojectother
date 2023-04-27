@@ -28,10 +28,17 @@ var mouseY = 0
 var spell1Timer = 0
 var spell1Size = 5
 var spell1Speed = 5
+var spell1Damage = 5
 var numProjectiles = 0
 var maxProjectiles = 500
 var debugInfoOn = 0
 var roomNum = 0
+var checkNumber = 0
+var checkNumber2 = 0
+var xDist = 0
+var yDist = 0
+var trueDist = 0
+var iFrames = 0
 //arrays
 //spells
 var spell1Array = []
@@ -44,9 +51,10 @@ function startCanvas(){
 	timer = setInterval(updateCanvas, 20)
 	Player.xPos = 50
 	Player.yPos = 50
-	monster1Array.push(new Monster1(300,400,50,30))
-	monster1Array.push(new Monster1(500,200,3,20))
-	monster1Array.push(new Monster1(400,600,5,14))
+	Player.health = 50
+	monster1Array.push(new Monster1(300,400,50,30, 5))
+	monster1Array.push(new Monster1(500,200,3,20, 5))
+	monster1Array.push(new Monster1(400,600,5,14, 5))
 }	
 //update canvas
 function updateCanvas(){
@@ -58,6 +66,9 @@ function updateCanvas(){
 	}
 	if(spell1Timer > 0){
 		spell1Timer--
+	}
+	if(iFrames > 0){
+		iFrames--
 	}
 	if(upPressed == "true"){
 		Player.yPos -= playerSpeed
@@ -84,9 +95,10 @@ function updateCanvas(){
 }
 //player stuff 
 class Player{
-	constructor(playerX,playerY){
+	constructor(playerX,playerY,playerHealth){
 		this.xPos = playerX
 		this.yPos = playerY
+		this.health = playerHealth
 	}
 }
 function drawPlayer(){
@@ -98,23 +110,8 @@ function drawPlayer(){
 	ctx.beginPath()
 	ctx.arc(Player.xPos, Player.yPos, PLAYERSIZE, 0, 2*Math.PI)
 	ctx.fill()
-
 }
-/*
-	var xDist = umbrellaHitX - rainHitX
-	// y distance
-	var yDist = umbrellaHitY - rainHitY
 
-	// diagonal distance (Pythagoras!)
-	var dist = Math.sqrt(xDist*xDist + yDist*yDist)
-	if (dist < umbrellaHitRadius + rainHitRadius){
-		// The raindrop has hit the umbrella, return true
-		return(true)
-	}else{
-		// The raindrop has not hit the umbrella, return false
-		return(false)
-	}
-*/
 //movement
 window.addEventListener('keydown', keyDownFunction)
 function keyDownFunction(keyboardEvent){
@@ -226,21 +223,28 @@ function dash(){
 		}
 }
 function checkDirection(){
-	if(upPressed=="true" && rightPressed=="false" && leftPressed=="false" && downPressed=="false"){
+	if(upPressed=="true"){
 		facingDirection = "up"
-	}else if(upPressed=="true" && rightPressed=="false" && leftPressed=="true" && downPressed=="false"){
-		facingDirection = "upLeft"
-	}else if(upPressed=="false" && rightPressed=="false" && leftPressed=="true" && downPressed=="false"){
+	}
+	if(leftPressed=="true"){
 		facingDirection = "left"
-	}else if(upPressed=="false" && rightPressed=="false" && leftPressed=="true" && downPressed=="true"){
-		facingDirection = "downLeft"
-	}else if(upPressed=="false" && rightPressed=="false" && leftPressed=="false" && downPressed=="true"){
+	}
+	if(downPressed=="true"){
 		facingDirection = "down"
-	}else if(upPressed=="false" && rightPressed=="true" && leftPressed=="false" && downPressed=="true"){
-		facingDirection = "downRight"
-	}else if(upPressed=="false" && rightPressed=="true" && leftPressed=="false" && downPressed=="false"){
+	}
+	if(rightPressed=="true"){
 		facingDirection = "right"
-	}else if(upPressed=="true" && rightPressed=="true" && leftPressed=="false" && downPressed=="false"){
+	}
+	if(upPressed=="true" && leftPressed=="true"){
+		facingDirection = "upLeft"
+	}
+	if(downPressed=="true" && leftPressed=="true"){
+		facingDirection = "downLeft"
+	}
+	if(downPressed=="true" && rightPressed=="true"){
+		facingDirection = "downRight"
+	}
+	if(upPressed=="true" && rightPressed=="true"){
 		facingDirection = "upRight"
 	}
 }
@@ -252,11 +256,12 @@ function mouseMovedFunction(mouseEvent){
 }
 //monsters 
 class Monster1{
-	constructor(monster1X,monster1Y,monster1Health,monster1Size){
+	constructor(monster1X,monster1Y,monster1Health,monster1Size,monster1Damage){
 		this.xPos = monster1X
 		this.yPos = monster1Y
-		this.hp = monster1Health
+		this.health = monster1Health
 		this.size = monster1Size
+		this.damage = monster1Damage
 	}
 }
 function drawMonsters(){
@@ -270,7 +275,38 @@ function drawMonsters(){
 	}
 }
 function checkMonsters(){
-		checkNumber = 0
+	checkNumber = 0
+	while(checkNumber < monster1Array.length){
+		if(monster1Array[checkNumber].size > PLAYERSIZE){
+		xDist = monster1Array[checkNumber].xPos -  Player.xPos
+		yDist = monster1Array[checkNumber].yPos -  Player.yPos
+		}else{
+		xDist = Player.xPos -  monster1Array[checkNumber].xPos
+		yDist = Player.yPos -  monster1Array[checkNumber].yPos
+		}
+		trueDist = Math.sqrt(xDist*xDist + yDist*yDist)
+		if(trueDist < monster1Array[checkNumber].size + PLAYERSIZE && iFrames == 0){
+			Player.health -= monster1Array[checkNumber].damage
+			iFrames = 30
+		}
+		checkNumber++
+	}
+	checkNumber = 0
+	while(checkNumber < monster1Array.length){
+		checkNumber2 = 0
+		while(checkNumber2 < spell1Array.length){
+			xDist = monster1Array[checkNumber].xPos -  spell1Array[checkNumber2].xPos
+			yDist = monster1Array[checkNumber].yPos -  spell1Array[checkNumber2].yPos
+			trueDist = Math.sqrt(xDist*xDist + yDist*yDist)
+			if(trueDist < monster1Array[checkNumber].size + spell1Size){
+				monster1Array[checkNumber].health -= spell1Damage
+				spell1Array.splice(checkNumber2, 1)
+			}
+			checkNumber2++
+		}
+		checkNumber++
+	}
+	checkNumber = 0
 	while(checkNumber < monster1Array.length){
 		if(monster1Array[checkNumber].health < 1){
 			monster1Array.splice(checkNumber,1)
@@ -352,8 +388,10 @@ function moveSpells(){
 }
 //debug info
 function drawDebugInfo(){
-	console.log("debug info on")
 	ctx.font = "15px arial"
 	ctx.fillStyle = "black"
 	ctx.fillText(numProjectiles+" projectiles", 1100, 40)
+	ctx.fillText(facingDirection, 1100, 60)
+	ctx.fillText(Player.health+" hp",1100, 700)
+	ctx.fillText(iFrames+" i frames",1100,80)
 }
