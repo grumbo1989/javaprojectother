@@ -58,8 +58,7 @@ function startCanvas(){
 }	
 //update canvas
 function updateCanvas(){
-	ctx.fillStyle = "white"
-	ctx.fillRect(0,0,WIDTH,HEIGHT)
+	drawBackground()
 	checkDirection()
 	if(dashTimer > 0){
 		dashTimer--
@@ -70,16 +69,16 @@ function updateCanvas(){
 	if(iFrames > 0){
 		iFrames--
 	}
-	if(upPressed == "true"){
+	if(upPressed == "true" && upWallCollision()){
 		Player.yPos -= playerSpeed
 	}
-	if(leftPressed == "true"){
+	if(leftPressed == "true" && leftWallCollision()){
 		Player.xPos -= playerSpeed
 	}
-	if(downPressed == "true"){
+	if(downPressed == "true" && downWallCollision()){
 		Player.yPos += playerSpeed
 	}
-	if(rightPressed == "true"){
+	if(rightPressed == "true" && rightWallCollision()){
 		Player.xPos += playerSpeed
 	}
 	if(debugInfoOn=="1"){
@@ -91,7 +90,25 @@ function updateCanvas(){
 	drawPlayer()
 	checkMonsters()
 	drawMonsters()
-	
+	if(monster1Array.length == "0"){}
+}
+function drawBackground(){
+	ctx.fillStyle = "#aaaaaa"
+	ctx.fillRect(0,0,WIDTH,HEIGHT)
+	ctx.strokeStyle = "black"
+	ctx.moveTo(0,0)
+	ctx.lineTo(20,20)
+	ctx.lineTo(WIDTH-20,20)
+	ctx.lineTo(WIDTH,0)
+	ctx.moveTo(WIDTH-20,20)
+	ctx.lineTo(WIDTH-20,HEIGHT-20)
+	ctx.lineTo(WIDTH,HEIGHT)
+	ctx.moveTo(WIDTH-20,HEIGHT-20)
+	ctx.lineTo(20,HEIGHT-20)
+	ctx.lineTo(0,HEIGHT)
+	ctx.moveTo(20,HEIGHT-20)
+	ctx.lineTo(20,20)
+	ctx.stroke()
 }
 //player stuff 
 class Player{
@@ -248,6 +265,35 @@ function checkDirection(){
 		facingDirection = "upRight"
 	}
 }
+//wall collision
+function upWallCollision(){
+	if(Player.yPos - PLAYERSIZE - playerSpeed < 20){
+		return(false)
+	}else{
+		return(true)
+	}
+}
+function leftWallCollision(){
+	if(Player.xPos - PLAYERSIZE - playerSpeed < 20){
+		return(false)
+	}else{
+		return(true)
+	}
+}
+function downWallCollision(){
+	if(Player.yPos + PLAYERSIZE + playerSpeed > HEIGHT - 20){
+		return(false)
+	}else{
+		return(true)
+	}
+}
+function rightWallCollision(){
+	if(Player.xPos + PLAYERSIZE + playerSpeed > WIDTH - 20){
+		return(false)
+	}else{
+		return(true)
+	}
+}
 //mouse stuff
 window.addEventListener('mousemove', mouseMovedFunction);
 function mouseMovedFunction(mouseEvent){
@@ -341,7 +387,7 @@ function drawSpells(){
 function checkSpells(){
 	checkNumber = 0
 	while(checkNumber < spell1Array.length){
-		if(spell1Array[checkNumber].xPos > WIDTH + spell1Size || spell1Array[checkNumber].yPos > HEIGHT + spell1Size || spell1Array[checkNumber].xPos < 0 - spell1Size || spell1Array[checkNumber].yPos < 0 - spell1Size){
+		if(spell1Array[checkNumber].xPos + spell1Size > WIDTH - 20 || spell1Array[checkNumber].yPos + spell1Size > HEIGHT - 20 || spell1Array[checkNumber].xPos - spell1Size < 0 + 20 || spell1Array[checkNumber].yPos - spell1Size < 0 + 20){
 			spell1Array.splice(checkNumber,1)
 			numProjectiles--
 		}
@@ -393,5 +439,5 @@ function drawDebugInfo(){
 	ctx.fillText(numProjectiles+" projectiles", 1100, 40)
 	ctx.fillText(facingDirection, 1100, 60)
 	ctx.fillText(Player.health+" hp",1100, 700)
-	ctx.fillText(iFrames+" i frames",1100,80)
+	ctx.fillText(monster1Array.length+" monsters left",1100,80)
 }
