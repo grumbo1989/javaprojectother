@@ -1,10 +1,8 @@
 /**
 * date: 14/04/23
 * author: me
-* version: 1.3
+* version: 1.5
 vvv IMPORTANT: 
-figure out why that thing happens where directions only work after you have pressed upleft
-and then fix it
 **/
 //constants
 const WIDTH = 1200
@@ -39,11 +37,15 @@ var xDist = 0
 var yDist = 0
 var trueDist = 0
 var iFrames = 0
+var roomReward
 //arrays
 //spells
 var spell1Array = []
 //enemiesd
 var monster1Array = []
+//images
+var heartUpgradeImage = new Image
+heartUpgradeImage.src = "heartUpgrade.png"
 //canvas setup
 window.onload=startCanvas
 function startCanvas(){
@@ -52,9 +54,13 @@ function startCanvas(){
 	Player.xPos = 50
 	Player.yPos = 50
 	Player.health = 50
-	monster1Array.push(new Monster1(300,400,50,30, 5))
+	monster1Array.push(new Monster1(300,400,5,30, 5))
 	monster1Array.push(new Monster1(500,200,3,20, 5))
 	monster1Array.push(new Monster1(400,600,5,14, 5))
+	Room.rewardX = 576
+	Room.rewardY = 200
+	Reward.state = 0
+	Reward.type = "health"
 }	
 //update canvas
 function updateCanvas(){
@@ -69,28 +75,32 @@ function updateCanvas(){
 	if(iFrames > 0){
 		iFrames--
 	}
-	if(upPressed == "true" && upWallCollision()){
+	if(upPressed == "true" && upWallCollision(1)){
 		Player.yPos -= playerSpeed
 	}
-	if(leftPressed == "true" && leftWallCollision()){
+	if(leftPressed == "true" && leftWallCollision(1)){
 		Player.xPos -= playerSpeed
 	}
-	if(downPressed == "true" && downWallCollision()){
+	if(downPressed == "true" && downWallCollision(1)){
 		Player.yPos += playerSpeed
 	}
-	if(rightPressed == "true" && rightWallCollision()){
+	if(rightPressed == "true" && rightWallCollision(1)){
 		Player.xPos += playerSpeed
 	}
 	if(debugInfoOn=="1"){
 		drawDebugInfo()
 	}
 	moveSpells()
+	numProjectiles = spell1Array.length
 	checkSpells()
 	drawSpells()
 	drawPlayer()
 	checkMonsters()
 	drawMonsters()
-	if(monster1Array.length == "0"){}
+	if(monster1Array.length == "0"){
+		Reward.state = "1"	
+		drawRewards()
+	}
 }
 function drawBackground(){
 	ctx.fillStyle = "#aaaaaa"
@@ -109,6 +119,30 @@ function drawBackground(){
 	ctx.moveTo(20,HEIGHT-20)
 	ctx.lineTo(20,20)
 	ctx.stroke()
+}
+//room stuff
+class Room{
+	constructor(rewardXPos,rewardYPos){
+		this.rewardX = rewardXPos
+		this.rewardY = rewardYPos
+	}
+}
+function roomClear(){
+	
+}
+//room reward
+class Reward{
+	constructor(rewardType,rewardState){
+		this.type = rewardType
+		this.state = rewardState
+	}
+}
+function drawRewards(){
+	if(Reward.state == "1"){
+		if(Reward.type == "health"){
+			ctx.drawImage(heartUpgradeImage,Room.rewardX,Room.rewardY)
+		}
+	}
 }
 //player stuff 
 class Player{
@@ -181,60 +215,84 @@ function dash(){
 		if(facingDirection == "up"){
 			count = 0
 			while(count < 8){
-				Player.yPos -= 15
+				if(upWallCollision(2)){
+					Player.yPos -= 15
+				}
 				count++
 			}
 		}
 		if(facingDirection == "upLeft"){
 			count = 0
-			while(count < 8){
-				Player.xPos -= 10
-				Player.yPos -= 10
+			while(count < 6){
+				if(leftWallCollision(2)){
+					Player.xPos -= 15
+				}
+				if(upWallCollision(2)){
+					Player.yPos -= 15
+				}
 				count++
 			}
 		}
 		if(facingDirection == "left"){
 			count = 0
 			while(count < 8){
-				Player.xPos -= 15
+				if(leftWallCollision(2)){
+					Player.xPos -= 15
+				}
 				count++
 			}
 		}
 		if(facingDirection == "downLeft"){
 			count = 0
-			while(count < 8){
-				Player.xPos -= 10
-				Player.yPos += 10
+			while(count < 6){
+				if(leftWallCollision(2)){
+					Player.xPos -= 15
+				}
+				if(downWallCollision(2)){
+					Player.yPos += 15
+				}
 				count++
 			}
 		}
 		if(facingDirection == "down"){
 			count = 0
 			while(count < 8){
-				Player.yPos += 15
+				if(downWallCollision(2)){
+					Player.yPos += 15
+				}
 				count++
 			}
 		}
 		if(facingDirection == "downRight"){
 			count = 0
-			while(count < 8){
-				Player.xPos += 10
-				Player.yPos += 10
+			while(count < 6){
+				if(rightWallCollision(2)){
+					Player.xPos += 15
+				}
+				if(downWallCollision(2)){
+					Player.yPos += 15
+				}
 				count++
 			}
 		}
 		if(facingDirection == "right"){
 			count = 0
 			while(count < 8){
-				Player.xPos += 15
+				if(rightWallCollision(2)){
+					Player.xPos += 15
+				}
 				count++
 			}
 		}
 		if(facingDirection == "upRight"){
 			count = 0
-			while(count < 8){
-				Player.xPos += 10
-				Player.yPos -= 10
+			while(count < 6){
+				if(rightWallCollision(2)){
+					Player.xPos += 15
+				}
+				if(upWallCollision(2)){
+					Player.yPos -= 15
+				}
 				count++
 			}
 		}
@@ -266,32 +324,64 @@ function checkDirection(){
 	}
 }
 //wall collision
-function upWallCollision(){
-	if(Player.yPos - PLAYERSIZE - playerSpeed < 20){
-		return(false)
+function upWallCollision(movement){
+	if(movement =="1"){
+		if(Player.yPos - PLAYERSIZE - playerSpeed < 20){
+			return(false)
+		}else{
+			return(true)
+		}
 	}else{
-		return(true)
+		if(Player.yPos - PLAYERSIZE - 15 < 20){
+			return(false)
+		}else{
+			return(true)
+		}
 	}
 }
-function leftWallCollision(){
-	if(Player.xPos - PLAYERSIZE - playerSpeed < 20){
-		return(false)
+function leftWallCollision(movement){
+	if(movement =="1"){
+		if(Player.xPos - PLAYERSIZE - playerSpeed < 20){
+			return(false)
+		}else{
+			return(true)
+		}
 	}else{
-		return(true)
+		if(Player.xPos - PLAYERSIZE - 15 < 20){
+			return(false)
+		}else{
+			return(true)
+		}
 	}
 }
-function downWallCollision(){
-	if(Player.yPos + PLAYERSIZE + playerSpeed > HEIGHT - 20){
-		return(false)
+function downWallCollision(movement){
+	if(movement == "1"){
+		if(Player.yPos + PLAYERSIZE + playerSpeed > HEIGHT - 20){
+			return(false)
+		}else{
+			return(true)
+		}
 	}else{
-		return(true)
+		if(Player.yPos + PLAYERSIZE + 15 > HEIGHT - 20){
+			return(false)
+		}else{
+			return(true)
+		}
 	}
 }
-function rightWallCollision(){
-	if(Player.xPos + PLAYERSIZE + playerSpeed > WIDTH - 20){
-		return(false)
+function rightWallCollision(movement){
+	if(movement == "1"){
+		if(Player.xPos + PLAYERSIZE + playerSpeed > WIDTH - 20){
+			return(false)
+		}else{
+			return(true)
+		}
 	}else{
-		return(true)
+		if(Player.xPos + PLAYERSIZE + 15 > WIDTH - 20){
+			return(false)
+		}else{
+			return(true)
+		}
 	}
 }
 //mouse stuff
@@ -364,7 +454,6 @@ function checkMonsters(){
 function spell1(){
 	spell1Timer = 15
 	spell1Array.push(new Spell1Projectile(Player.xPos,Player.yPos, facingDirection))
-	numProjectiles++
 }
 class Spell1Projectile{
 	constructor(spell1X, spell1Y, spell1Direction){
@@ -389,7 +478,6 @@ function checkSpells(){
 	while(checkNumber < spell1Array.length){
 		if(spell1Array[checkNumber].xPos + spell1Size > WIDTH - 20 || spell1Array[checkNumber].yPos + spell1Size > HEIGHT - 20 || spell1Array[checkNumber].xPos - spell1Size < 0 + 20 || spell1Array[checkNumber].yPos - spell1Size < 0 + 20){
 			spell1Array.splice(checkNumber,1)
-			numProjectiles--
 		}
 		checkNumber++
 	}
