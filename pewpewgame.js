@@ -3,11 +3,14 @@
 * author: me
 * version: 1.5
 vvv IMPORTANT: 
+things to doo
+finish the room clearing and shit
 **/
 //constants
 const WIDTH = 1200
 const HEIGHT = 900
 const PLAYERSIZE = 25
+const WALLSIZE = 56
 //variables
 var ctx
 var upPressed = false
@@ -39,6 +42,7 @@ var trueDist = 0
 var iFrames = 0
 var roomReward
 //arrays
+var possibleRewards = ["health"]
 //spells
 var spell1Array = []
 //enemiesd
@@ -46,25 +50,29 @@ var monster1Array = []
 //images
 var heartUpgradeImage = new Image
 heartUpgradeImage.src = "heartUpgrade.png"
+var backgroundImage = new Image
+backgroundImage.src = "background.png"
 //canvas setup
 window.onload=startCanvas
 function startCanvas(){
 	ctx=document.getElementById("myCanvas").getContext("2d")
 	timer = setInterval(updateCanvas, 20)
-	Player.xPos = 50
-	Player.yPos = 50
+	Player.xPos = 500
+	Player.yPos = 500
 	Player.health = 50
 	monster1Array.push(new Monster1(300,400,5,30, 5))
 	monster1Array.push(new Monster1(500,200,3,20, 5))
 	monster1Array.push(new Monster1(400,600,5,14, 5))
 	Room.rewardX = 576
 	Room.rewardY = 200
+	Room.state = 0
 	Reward.state = 0
 	Reward.type = "health"
+	generateNewRoom("health","up","start")
 }	
 //update canvas
 function updateCanvas(){
-	drawBackground()
+	ctx.drawImage(backgroundImage,0,0)
 	checkDirection()
 	if(dashTimer > 0){
 		dashTimer--
@@ -98,43 +106,38 @@ function updateCanvas(){
 	checkMonsters()
 	drawMonsters()
 	if(monster1Array.length == "0"){
-		Reward.state = "1"	
+		roomClear()
+		if(Reward.state == "0"){
+			Reward.state = "1"	
+			Reward.variety = "health"
+		}
 		drawRewards()
 	}
 }
-function drawBackground(){
-	ctx.fillStyle = "#aaaaaa"
-	ctx.fillRect(0,0,WIDTH,HEIGHT)
-	ctx.strokeStyle = "black"
-	ctx.moveTo(0,0)
-	ctx.lineTo(20,20)
-	ctx.lineTo(WIDTH-20,20)
-	ctx.lineTo(WIDTH,0)
-	ctx.moveTo(WIDTH-20,20)
-	ctx.lineTo(WIDTH-20,HEIGHT-20)
-	ctx.lineTo(WIDTH,HEIGHT)
-	ctx.moveTo(WIDTH-20,HEIGHT-20)
-	ctx.lineTo(20,HEIGHT-20)
-	ctx.lineTo(0,HEIGHT)
-	ctx.moveTo(20,HEIGHT-20)
-	ctx.lineTo(20,20)
-	ctx.stroke()
-}
+
 //room stuff
 class Room{
-	constructor(rewardXPos,rewardYPos){
+	constructor(rewardXPos,rewardYPos,roomState, roomUpDoor, roomLeftDoor, roomDownDoor, roomRightDoor){
 		this.rewardX = rewardXPos
 		this.rewardY = rewardYPos
+		this.state = roomState
+		this.upDoor = roomUpDoor
+		this.leftDoor = roomLeftDoor
+		this.downDoor = roomDownDoor
+		this.rightDoor = roomRightDoor
 	}
 }
 function roomClear(){
-	
+	if(Reward.state == "1"){
+
+	}
 }
 //room reward
 class Reward{
-	constructor(rewardType,rewardState){
+	constructor(rewardType,rewardState, rewardVariety){
 		this.type = rewardType
 		this.state = rewardState
+		this.variety = rewardVariety
 	}
 }
 function drawRewards(){
@@ -143,6 +146,9 @@ function drawRewards(){
 			ctx.drawImage(heartUpgradeImage,Room.rewardX,Room.rewardY)
 		}
 	}
+}
+function generateNewRoom(lastRoomReward, doorEntered, lastRoomVariant){
+
 }
 //player stuff 
 class Player{
@@ -326,13 +332,13 @@ function checkDirection(){
 //wall collision
 function upWallCollision(movement){
 	if(movement =="1"){
-		if(Player.yPos - PLAYERSIZE - playerSpeed < 20){
+		if(Player.yPos - PLAYERSIZE - playerSpeed < WALLSIZE){
 			return(false)
 		}else{
 			return(true)
 		}
 	}else{
-		if(Player.yPos - PLAYERSIZE - 15 < 20){
+		if(Player.yPos - PLAYERSIZE - 15 < WALLSIZE){
 			return(false)
 		}else{
 			return(true)
@@ -341,13 +347,13 @@ function upWallCollision(movement){
 }
 function leftWallCollision(movement){
 	if(movement =="1"){
-		if(Player.xPos - PLAYERSIZE - playerSpeed < 20){
+		if(Player.xPos - PLAYERSIZE - playerSpeed < WALLSIZE){
 			return(false)
 		}else{
 			return(true)
 		}
 	}else{
-		if(Player.xPos - PLAYERSIZE - 15 < 20){
+		if(Player.xPos - PLAYERSIZE - 15 < WALLSIZE){
 			return(false)
 		}else{
 			return(true)
@@ -356,13 +362,13 @@ function leftWallCollision(movement){
 }
 function downWallCollision(movement){
 	if(movement == "1"){
-		if(Player.yPos + PLAYERSIZE + playerSpeed > HEIGHT - 20){
+		if(Player.yPos + PLAYERSIZE + playerSpeed > HEIGHT - WALLSIZE){
 			return(false)
 		}else{
 			return(true)
 		}
 	}else{
-		if(Player.yPos + PLAYERSIZE + 15 > HEIGHT - 20){
+		if(Player.yPos + PLAYERSIZE + 15 > HEIGHT - WALLSIZE){
 			return(false)
 		}else{
 			return(true)
@@ -371,13 +377,13 @@ function downWallCollision(movement){
 }
 function rightWallCollision(movement){
 	if(movement == "1"){
-		if(Player.xPos + PLAYERSIZE + playerSpeed > WIDTH - 20){
+		if(Player.xPos + PLAYERSIZE + playerSpeed > WIDTH - WALLSIZE){
 			return(false)
 		}else{
 			return(true)
 		}
 	}else{
-		if(Player.xPos + PLAYERSIZE + 15 > WIDTH - 20){
+		if(Player.xPos + PLAYERSIZE + 15 > WIDTH - WALLSIZE){
 			return(false)
 		}else{
 			return(true)
@@ -476,7 +482,7 @@ function drawSpells(){
 function checkSpells(){
 	checkNumber = 0
 	while(checkNumber < spell1Array.length){
-		if(spell1Array[checkNumber].xPos + spell1Size > WIDTH - 20 || spell1Array[checkNumber].yPos + spell1Size > HEIGHT - 20 || spell1Array[checkNumber].xPos - spell1Size < 0 + 20 || spell1Array[checkNumber].yPos - spell1Size < 0 + 20){
+		if(spell1Array[checkNumber].xPos + spell1Size > WIDTH - WALLSIZE || spell1Array[checkNumber].yPos + spell1Size > HEIGHT - WALLSIZE || spell1Array[checkNumber].xPos - spell1Size < 0 + WALLSIZE || spell1Array[checkNumber].yPos - spell1Size < 0 + WALLSIZE){
 			spell1Array.splice(checkNumber,1)
 		}
 		checkNumber++
