@@ -1,7 +1,7 @@
 /**
 * date: 14/04/23
 * author: me
-* version: 1.5
+* version: 2.2
 vvv IMPORTANT: 
 things to doo
 finish the room clearing and shit
@@ -41,6 +41,9 @@ var yDist = 0
 var trueDist = 0
 var iFrames = 0
 var roomReward
+var doorEntered = "down"
+var loadingScreen = "false"
+var rewardSize = 24
 //arrays
 var possibleRewards = ["health"]
 //spells
@@ -52,6 +55,8 @@ var heartUpgradeImage = new Image
 heartUpgradeImage.src = "heartUpgrade.png"
 var backgroundImage = new Image
 backgroundImage.src = "background.png"
+var doorUpOpenImage = new Image
+doorUpOpenImage.src = "doorUp.png"
 //canvas setup
 window.onload=startCanvas
 function startCanvas(){
@@ -66,13 +71,22 @@ function startCanvas(){
 	Room.rewardX = 576
 	Room.rewardY = 200
 	Room.state = 0
+	Room.upDoor = "closed"
+	Room.leftDoor = "closed"
+	Room.downDoor = "closed"
+	Room.rightDoor = "closed"
 	Reward.state = 0
 	Reward.type = "health"
 	generateNewRoom("health","up","start")
 }	
 //update canvas
 function updateCanvas(){
+	if(loadingScreen == "true"){
+		ctx.fillStyle = "black"
+		ctx.fillRect(0,0,WIDTH,HEIGHT)
+	}
 	ctx.drawImage(backgroundImage,0,0)
+	drawDoors()
 	checkDirection()
 	if(dashTimer > 0){
 		dashTimer--
@@ -106,10 +120,24 @@ function updateCanvas(){
 	checkMonsters()
 	drawMonsters()
 	if(monster1Array.length == "0"){
-		roomClear()
 		if(Reward.state == "0"){
+			nextRoomsReward()
 			Reward.state = "1"	
 			Reward.variety = "health"
+		}
+		if(Reward.state == "1"){
+			xDist = Player.xPos - (Room.rewardX + rewardSize)
+			yDist = Player.yPos - (Room.rewardY + rewardSize)
+			trueDist = Math.sqrt(xDist*xDist + yDist*yDist)
+			if(trueDist < PLAYERSIZE + rewardSize + 19){
+				Reward.state = "2"
+				console.log("eehehe")
+			}
+		}
+		if(Reward.state == "2"){
+			if(doorCheck() == "true"){
+				
+			}
 		}
 		drawRewards()
 	}
@@ -117,19 +145,31 @@ function updateCanvas(){
 
 //room stuff
 class Room{
-	constructor(rewardXPos,rewardYPos,roomState, roomUpDoor, roomLeftDoor, roomDownDoor, roomRightDoor){
+	constructor(rewardXPos,rewardYPos, roomUpDoor, roomLeftDoor, roomDownDoor, roomRightDoor){
 		this.rewardX = rewardXPos
 		this.rewardY = rewardYPos
-		this.state = roomState
 		this.upDoor = roomUpDoor
 		this.leftDoor = roomLeftDoor
 		this.downDoor = roomDownDoor
 		this.rightDoor = roomRightDoor
 	}
 }
-function roomClear(){
-	if(Reward.state == "1"){
-
+function nextRoomsReward(){
+	Room.upDoor = possibleRewards[Math.floor(Math.random())*possibleRewards.length]
+	Room.leftDoor = possibleRewards[Math.floor(Math.random())*possibleRewards.length]
+	Room.downDoor = possibleRewards[Math.floor(Math.random())*possibleRewards.length]
+	Room.rightDoor = possibleRewards[Math.floor(Math.random())*possibleRewards.length]
+	if(doorEntered == "up"){
+		Room.upDoor = "closed"
+	}
+	if(doorEntered == "left"){
+		Room.leftDoor = "closed"
+	}
+	if(doorEntered == "down"){
+		Room.downDoor = "closed"
+	}
+	if(doorEntered == "right"){
+		Room.downDoor = "closed"
 	}
 }
 //room reward
@@ -149,6 +189,27 @@ function drawRewards(){
 }
 function generateNewRoom(lastRoomReward, doorEntered, lastRoomVariant){
 
+}
+//door entering stuff
+function doorCheck(){
+	if(Player.xPos > 500 && Player.xPos < 700 && Player.yPos - PLAYERSIZE < WALLSIZE + 5 && Room.upDoor != "closed" ){
+		doorEntered = "down"
+		return(true)
+	}else if(Player.yPos > 350 && Player.yPos < 550 && Player.xPos - PLAYERSIZE < WALLSIZE + 5 && Room.leftDoor != "closed" ){
+		doorEntered = "right"
+		return(true)
+	}else if(Player.xPos > 500 && Player.xPos < 700 && Player.yPos + PLAYERSIZE > HEIGHT - WALLSIZE - 3 && Room.downDoor != "closed" ){
+		doorEntered = "up"
+		return(true)
+	}else if(Player.yPos > 350 && Player.yPos < 550 && Player.xPos + PLAYERSIZE > WIDTH - WALLSIZE - 3 && Room.rightDoor != "closed" ){
+		doorEntered = "left"
+		return(true)
+	}else{
+		return(false)
+	}
+}
+function drawDoors(){
+	ctx.drawImage(doorUpOpenImage,456,-3)
 }
 //player stuff 
 class Player{
