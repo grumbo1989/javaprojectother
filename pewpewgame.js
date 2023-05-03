@@ -81,10 +81,7 @@ function startCanvas(){
 }	
 //update canvas
 function updateCanvas(){
-	if(loadingScreen == "true"){
-		ctx.fillStyle = "black"
-		ctx.fillRect(0,0,WIDTH,HEIGHT)
-	}
+
 	ctx.drawImage(backgroundImage,0,0)
 	drawDoors()
 	checkDirection()
@@ -121,7 +118,6 @@ function updateCanvas(){
 	drawMonsters()
 	if(monster1Array.length == "0"){
 		if(Reward.state == "0"){
-			nextRoomsReward()
 			Reward.state = "1"	
 			Reward.variety = "health"
 		}
@@ -132,14 +128,38 @@ function updateCanvas(){
 			if(trueDist < PLAYERSIZE + rewardSize + 19){
 				Reward.state = "2"
 				console.log("eehehe")
+				nextRoomsReward()
 			}
 		}
 		if(Reward.state == "2"){
 			if(doorCheck() == "true"){
-				
+				loadingScreen = 25
+				console.log(loadingScreen)
+				if(doorEntered == "up"){
+					Player.xPos = 600
+					Player.yPos = 100
+				}
+				if(doorEntered == "left"){
+					Player.xPos = 100
+					Player.yPos = 450
+				}
+				if(doorEntered == "down"){
+					Player.xPos = 600
+					Player.yPos = 800
+				}
+				if(doorEntered == "right"){
+					Player.xPos = 1100
+					Player.yPos = 450
+				}
 			}
 		}
 		drawRewards()
+	}
+	if(loadingScreen > 0){
+		console.log(loadingScreen)
+		loadingScreen--
+		ctx.fillStyle = "black"
+		ctx.fillRect(0,0,WIDTH,HEIGHT)
 	}
 }
 
@@ -194,22 +214,23 @@ function generateNewRoom(lastRoomReward, doorEntered, lastRoomVariant){
 function doorCheck(){
 	if(Player.xPos > 500 && Player.xPos < 700 && Player.yPos - PLAYERSIZE < WALLSIZE + 5 && Room.upDoor != "closed" ){
 		doorEntered = "down"
-		return(true)
+		console.log("test")
+		return("true")
 	}else if(Player.yPos > 350 && Player.yPos < 550 && Player.xPos - PLAYERSIZE < WALLSIZE + 5 && Room.leftDoor != "closed" ){
 		doorEntered = "right"
-		return(true)
+		return("true")
 	}else if(Player.xPos > 500 && Player.xPos < 700 && Player.yPos + PLAYERSIZE > HEIGHT - WALLSIZE - 3 && Room.downDoor != "closed" ){
 		doorEntered = "up"
-		return(true)
+		return("true")
 	}else if(Player.yPos > 350 && Player.yPos < 550 && Player.xPos + PLAYERSIZE > WIDTH - WALLSIZE - 3 && Room.rightDoor != "closed" ){
 		doorEntered = "left"
-		return(true)
+		return("true")
 	}else{
-		return(false)
+		return("false")
 	}
 }
 function drawDoors(){
-	ctx.drawImage(doorUpOpenImage,456,-3)
+	ctx.drawImage(doorUpOpenImage,456,-6)
 }
 //player stuff 
 class Player{
