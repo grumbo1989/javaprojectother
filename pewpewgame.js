@@ -4,14 +4,13 @@
 * version: 2.4
 vvv IMPORTANT: 
 things to doo
-finish the room clearing and shit
 **/
 //constants
 const WIDTH = 1200
 const HEIGHT = 900
 const PLAYERSIZE = 25
 const WALLSIZE = 56
-//variables
+//variables (so many :I)
 var ctx
 var upPressed = false
 var leftPressed = false
@@ -27,9 +26,10 @@ var dashCooldown = 1 //time between dashes
 var mouseX = 0
 var mouseY = 0
 var spell1Timer = 0
-var spell1Size = 5
+var spell1Size = 6
 var spell1Speed = 5
 var spell1Damage = 5
+var spell1CooldownTime = 15
 var numProjectiles = 0
 var maxProjectiles = 500
 var debugInfoOn = 0
@@ -58,6 +58,12 @@ var backgroundImage = new Image
 backgroundImage.src = "background.png"
 var doorUpOpenImage = new Image
 doorUpOpenImage.src = "doorUp.png"
+var doorLeftOpenImage = new Image
+doorLeftOpenImage.src = "doorLeft.png"
+var doorDownOpenImage = new Image
+doorDownOpenImage.src = "doorDown.png"
+var doorRightOpenImage = new Image
+doorRightOpenImage.src = "doorRight.png"
 var heartUpgradePreviewImage = new Image
 heartUpgradePreviewImage.src = "heartUpgradePreview.png"
 var playerUpgradePreviewImage = new Image
@@ -68,6 +74,8 @@ var minibossPreviewImage = new Image
 minibossPreviewImage.src = "minibossPreview.png"
 var bossPreviewImage = new Image
 bossPreviewImage.src = "bossPreview.png"
+var spell1Image = new Image
+spell1Image.src = "spell1.png"
 //canvas setup
 window.onload=startCanvas
 function startCanvas(){
@@ -129,7 +137,6 @@ function updateCanvas(){
 		if(Reward.state == "0"){
 			Reward.state = "1"	
 			makeRewardVariety(Reward.type)
-			Reward.variety = "health"
 		}
 		if(Reward.state == "1"){
 			drawRewards()
@@ -147,7 +154,6 @@ function updateCanvas(){
 			if(doorCheck() == "true"){
 				roomNum++
 				loadingScreen = 25
-				generateNewRoom()
 				if(doorEntered == "up"){
 					Player.xPos = 600
 					Player.yPos = 100
@@ -168,6 +174,7 @@ function updateCanvas(){
 					Player.yPos = 450
 					Reward.type = Room.leftDoor
 				}
+				generateNewRoom()
 			}
 		}
 		
@@ -190,8 +197,11 @@ function makeRewardVariety(type){
 	if(type == "spell"){
 		Reward.variety = "spell"
 	}
-	if(type == ""){
-
+	if(type == "miniboss"){
+		Reward.variety = "newSpell"
+	}
+	if(type == "boss"){
+		Reward.variety = "newSpell"
 	}
 }
 function grantReward(variety){
@@ -207,9 +217,9 @@ function grantReward(variety){
 		if(random == 1){
 			spell1Damage = spell1Damage * 1.2
 		}else if(random == 2){
-			spell1Speed++
+			spell1Speed = spell1Speed + 1
 		}else if(random == 3){
-			spell1Size += 2
+			spell1CooldownTime--
 		}
 	}
 }
@@ -270,7 +280,7 @@ function drawRewards(){
 		if(Reward.type == "health"){
 			ctx.drawImage(heartUpgradeImage,Room.rewardX,Room.rewardY)
 		}else {
-			ctx.fillStyle == "#EFB0FF"
+			ctx.fillStyle = "#EFB0FF"
 			ctx.beginPath()
 			ctx.arc(Room.rewardX, Room.rewardY, rewardSize, 0, 2*Math.PI)
 			ctx.fill()
@@ -378,6 +388,9 @@ function doorCheck(){
 }
 function drawDoors(){
 	ctx.drawImage(doorUpOpenImage,456,-6)
+	ctx.drawImage(doorLeftOpenImage,-6,306)
+	ctx.drawImage(doorDownOpenImage,456,834)
+	ctx.drawImage(doorRightOpenImage,1134,306)
 }
 //player stuff 
 class Player{
@@ -688,7 +701,7 @@ function checkMonsters(){
 }
 //spells
 function spell1(){
-	spell1Timer = 15
+	spell1Timer = spell1CooldownTime
 	spell1Array.push(new Spell1Projectile(Player.xPos,Player.yPos, facingDirection))
 }
 class Spell1Projectile{
@@ -701,10 +714,7 @@ class Spell1Projectile{
 function drawSpells(){
 	checkNumber = 0
 	while(checkNumber < spell1Array.length){
-		ctx.fillStyle = "#9932CC"
-		ctx.beginPath()
-		ctx.arc(spell1Array[checkNumber].xPos,spell1Array[checkNumber].yPos, spell1Size, 0, 2*Math.PI)
-		ctx.fill()
+		ctx.drawImage(spell1Image, spell1Array[checkNumber].xPos - spell1Size, spell1Array[checkNumber].yPos - spell1Size)
 		checkNumber++
 	}
 
@@ -759,9 +769,10 @@ function moveSpells(){
 //debug info
 function drawDebugInfo(){
 	ctx.font = "15px arial"
-	ctx.fillStyle = "black"
+	ctx.fillStyle = "white"
 	ctx.fillText(numProjectiles+" projectiles", 1100, 40)
 	ctx.fillText(facingDirection, 1100, 60)
 	ctx.fillText(Player.health+" hp",1100, 700)
 	ctx.fillText(monster1Array.length+" monsters left",1100,80)
+	ctx.fillText(spell1Damage+" "+spell1Speed+" "+spell1CooldownTime,1050,750)
 }
