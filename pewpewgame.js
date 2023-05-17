@@ -45,6 +45,7 @@ var doorEntered = "down"
 var loadingScreen = "false"
 var rewardSize = 24
 var rewardPreviewSize = 30
+var dead = "false"
 //arrays
 var possibleRewards = ["health","spell","player","miniboss","boss"]
 //spells
@@ -81,9 +82,13 @@ window.onload=startCanvas
 function startCanvas(){
 	ctx=document.getElementById("myCanvas").getContext("2d")
 	timer = setInterval(updateCanvas, 20)
+	gameStart()
+}
+function gameStart(){
 	Player.xPos = 500
 	Player.yPos = 500
 	Player.health = 50
+	Player.maxHealth = 50
 	Room.rewardX = 576
 	Room.rewardY = 200
 	Room.state = 0
@@ -94,14 +99,23 @@ function startCanvas(){
 	Reward.state = 0
 	Reward.type = "health"
 	doorEntered = "down"
+	dead = "false"
 	generateNewRoom()
-}	
+}
 //update canvas
 function updateCanvas(){
 
 	ctx.drawImage(backgroundImage,0,0)
 	drawDoors()
+	if(Player.health < 1){
+		youLostLmao()
+	}
 	checkDirection()
+	if(loadingScreen > 0){
+		inControl = "false"
+	}else {
+		inControl = "true"
+	}
 	if(dashTimer > 0){
 		dashTimer--
 	}
@@ -126,13 +140,17 @@ function updateCanvas(){
 	if(debugInfoOn=="1"){
 		drawDebugInfo()
 	}
-	moveSpells()
 	numProjectiles = spell1Array.length
-	checkSpells()
-	drawSpells()
-	drawPlayer()
-	checkMonsters()
-	drawMonsters()
+	if(dead == "false"){
+		moveSpells()
+		checkSpells()
+		drawSpells()
+		drawPlayer()
+		checkMonsters()
+		drawMonsters()
+	}else{
+		inControl = "false"
+	}
 	if(monster1Array.length == "0"){
 		if(Reward.state == "0"){
 			Reward.state = "1"	
@@ -177,7 +195,6 @@ function updateCanvas(){
 				generateNewRoom()
 			}
 		}
-		
 	}
 	if(loadingScreen > 0){
 		console.log(loadingScreen)
@@ -192,6 +209,7 @@ function makeRewardVariety(type){
 		Reward.variety = "health"
 	}
 	if(type == "player"){
+		if(Math.random())
 		Reward.variety = "damage"
 	}
 	if(type == "spell"){
@@ -358,6 +376,7 @@ function drawNextRewards(){
 	}
 }
 function generateNewRoom(lastRoomReward, entryDoor, lastRoomVariant){
+	monster1Array = []
 	if(Reward.type == "miniboss"){
 		monster1Array.push(new Monster1(600, 450, 80, 45, 14))
 	}else{
@@ -411,37 +430,43 @@ function drawPlayer(){
 	ctx.arc(Player.xPos, Player.yPos, PLAYERSIZE, 0, 2*Math.PI)
 	ctx.fill()
 }
-
+function youLostLmao(){
+	dead = "true"
+	ctx.fillStyle = "blue"
+	ctx.fillRect(450,450,300,100)
+}
 //movement
 window.addEventListener('keydown', keyDownFunction)
 function keyDownFunction(keyboardEvent){
 	
 	var keyDown = keyboardEvent.key
-	if (keyDown=="w"){
-		upPressed = "true"
-	}
-	if (keyDown=="a"){
-		leftPressed = "true"
-	}
-	if (keyDown=="s"){
-		downPressed = "true"
-	}
-	if (keyDown=="d"){
-		rightPressed = "true"
-	}
-	if (keyDown=="f" && dashTimer == "0"){
-		dash()
-	}
-	if (keyDown=="1" && spell1Timer == "0"){
-		spell1()
-	}
-	if (keyDown=="p"){
-		if(debugInfoOn=="1"){
-			debugInfoOn="0"
-		}else{
-			debugInfoOn="1"
+	if(inControl == "true"){
+		if (keyDown=="w"){
+			upPressed = "true"
 		}
-	}
+		if (keyDown=="a"){
+			leftPressed = "true"
+		}
+		if (keyDown=="s"){
+			downPressed = "true"
+		}
+		if (keyDown=="d"){
+			rightPressed = "true"
+		}
+		if (keyDown=="f" && dashTimer == "0"){
+			dash()
+		}
+		if (keyDown=="1" && spell1Timer == "0"){
+			spell1()
+		}
+		if (keyDown=="p"){
+			if(debugInfoOn=="1"){
+				debugInfoOn="0"
+			}else{
+				debugInfoOn="1"
+			}
+		}
+	}	
 }
 window.addEventListener('keyup', keyUpFunction)
 function keyUpFunction(keyboardEvent){
@@ -634,10 +659,18 @@ function rightWallCollision(movement){
 	}
 }
 //mouse stuff
-window.addEventListener('mousemove', mouseMovedFunction);
+window.addEventListener('mousemove', mouseMovedFunction)
 function mouseMovedFunction(mouseEvent){
 	mouseX = mouseEvent.offsetX
 	mouseY = mouseEvent.offsetY
+}
+window.addEventListener('click', youClicked)
+function youClicked(mouseEvent){
+	if(dead == "true"){
+		if(mouseX > 450 && mouseX < 750 && mouseY > 450 && mouseY < 550){
+			gameStart()
+		}
+	}
 }
 //monsters 
 class Monster1{
