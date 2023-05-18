@@ -1,9 +1,10 @@
 /**
+* title: pewpew game (placeholder)
 * date: 14/04/23
 * author: me
-* version: 2.4
+* version: 4.4
 vvv IMPORTANT: 
-things to doo
+all music and sprites are made by me unless specified :]
 **/
 //constants
 const WIDTH = 1200
@@ -25,11 +26,11 @@ var dashSpeed = 1 //how fast you move when dashing
 var dashCooldown = 1 //time between dashes
 var mouseX = 0
 var mouseY = 0
-var spell1Timer = 0
-var spell1Size = 6
-var spell1Speed = 5
-var spell1Damage = 5
-var spell1CooldownTime = 15
+var magicBlastTimer = 0
+var magicBlastSize = 6
+var magicBlastSpeed = 5
+var magicBlastDamage = 5
+var magicBlastCooldownTime = 15
 var numProjectiles = 0
 var maxProjectiles = 500
 var debugInfoOn = 0
@@ -46,10 +47,11 @@ var loadingScreen = "false"
 var rewardSize = 24
 var rewardPreviewSize = 30
 var dead = "false"
+var random
 //arrays
 var possibleRewards = ["health","spell","player","miniboss","boss"]
 //spells
-var spell1Array = []
+var magicBlastArray = []
 //enemiesd
 var monster1Array = []
 //images
@@ -75,8 +77,8 @@ var minibossPreviewImage = new Image
 minibossPreviewImage.src = "minibossPreview.png"
 var bossPreviewImage = new Image
 bossPreviewImage.src = "bossPreview.png"
-var spell1Image = new Image
-spell1Image.src = "spell1.png"
+var magicBlastImage = new Image
+magicBlastImage.src = "spell1.png"
 //canvas setup
 window.onload=startCanvas
 function startCanvas(){
@@ -87,8 +89,8 @@ function startCanvas(){
 function gameStart(){
 	Player.xPos = 500
 	Player.yPos = 500
-	Player.health = 50
-	Player.maxHealth = 50
+	Player.health = 75
+	Player.maxHealth = 75
 	Room.rewardX = 576
 	Room.rewardY = 200
 	Room.state = 0
@@ -119,8 +121,8 @@ function updateCanvas(){
 	if(dashTimer > 0){
 		dashTimer--
 	}
-	if(spell1Timer > 0){
-		spell1Timer--
+	if(magicBlastTimer > 0){
+		magicBlastTimer--
 	}
 	if(iFrames > 0){
 		iFrames--
@@ -140,9 +142,14 @@ function updateCanvas(){
 	if(debugInfoOn=="1"){
 		drawDebugInfo()
 	}
-	numProjectiles = spell1Array.length
+	numProjectiles = magicBlastArray.length
 	if(dead == "false"){
 		moveSpells()
+		count = 0
+		while(count < monster1Array.length){
+			monster1Array[count].moveMonster1()
+			count++
+		}
 		checkSpells()
 		drawSpells()
 		drawPlayer()
@@ -228,16 +235,16 @@ function grantReward(variety){
 		Player.health += 25
 	}
 	if(variety == "damage"){
-		spell1Damage = spell1Damage * 1.1
+		magicBlastDamage = magicBlastDamage * 1.1
 	}
 	if(variety == "spell"){
 		random = Math.ceil(Math.random * 3)
 		if(random == 1){
-			spell1Damage = spell1Damage * 1.2
+			magicBlastDamage = magicBlastDamage * 1.2
 		}else if(random == 2){
-			spell1Speed = spell1Speed + 1
+			magicBlastSpeed = magicBlastSpeed + 1
 		}else if(random == 3){
-			spell1CooldownTime--
+			magicBlastCooldownTime--
 		}
 	}
 }
@@ -378,11 +385,11 @@ function drawNextRewards(){
 function generateNewRoom(lastRoomReward, entryDoor, lastRoomVariant){
 	monster1Array = []
 	if(Reward.type == "miniboss"){
-		monster1Array.push(new Monster1(600, 450, 80, 45, 14))
+		monster1Array.push(new Monster1(600, 450, 80, 45, 14, 3))
 	}else{
-		monster1Array.push(new Monster1(300,400,5,30, 5))
-		monster1Array.push(new Monster1(500,200,3,20, 5))
-		monster1Array.push(new Monster1(400,600,5,14, 5))
+		monster1Array.push(new Monster1(300,400,15,20, 5, 2))
+		monster1Array.push(new Monster1(500,200,15,20, 5, 2))
+		monster1Array.push(new Monster1(400,600,15,20, 5, 2))
 	}
 	Reward.state = 0
 }
@@ -456,8 +463,8 @@ function keyDownFunction(keyboardEvent){
 		if (keyDown=="f" && dashTimer == "0"){
 			dash()
 		}
-		if (keyDown=="1" && spell1Timer == "0"){
-			spell1()
+		if (keyDown=="1" && magicBlastTimer == "0"){
+			magicBlast()
 		}
 		if (keyDown=="p"){
 			if(debugInfoOn=="1"){
@@ -674,12 +681,43 @@ function youClicked(mouseEvent){
 }
 //monsters 
 class Monster1{
-	constructor(monster1X,monster1Y,monster1Health,monster1Size,monster1Damage){
+	constructor(monster1X,monster1Y,monster1Health,monster1Size,monster1Damage,monster1Speed){
 		this.xPos = monster1X
 		this.yPos = monster1Y
 		this.health = monster1Health
 		this.size = monster1Size
 		this.damage = monster1Damage
+		this.speed = monster1Speed
+	}
+	moveMonster1(){
+		if(this.xPos == Player.xPos){
+			if(this.yPos > Player.yPos){
+				this.yPos -= this.speed
+			}else if(this.yPos < Player.yPos){
+				this.yPos += this.speed
+			}
+		}else if(this.yPos == Player.yPos){
+			if(this.xPos > Player.xPos){
+				this.xPos -= this.speed
+			}else if(this.xPos < Player.xPos){
+				this.xPos += this.speed
+			}
+		}else {
+			random = Math.ceil(Math.random()*2)
+			if(random == 1){
+				if(this.yPos > Player.yPos){
+					this.yPos -= this.speed
+				}else if(this.yPos < Player.yPos){
+					this.yPos += this.speed
+				}
+			}else {
+				if(this.xPos > Player.xPos){
+					this.xPos -= this.speed
+				}else if(this.xPos < Player.xPos){
+					this.xPos += this.speed
+				}
+			}
+		}
 	}
 }
 function drawMonsters(){
@@ -712,13 +750,13 @@ function checkMonsters(){
 	checkNumber = 0
 	while(checkNumber < monster1Array.length){
 		checkNumber2 = 0
-		while(checkNumber2 < spell1Array.length){
-			xDist = monster1Array[checkNumber].xPos -  spell1Array[checkNumber2].xPos
-			yDist = monster1Array[checkNumber].yPos -  spell1Array[checkNumber2].yPos
+		while(checkNumber2 < magicBlastArray.length){
+			xDist = monster1Array[checkNumber].xPos -  magicBlastArray[checkNumber2].xPos
+			yDist = monster1Array[checkNumber].yPos -  magicBlastArray[checkNumber2].yPos
 			trueDist = Math.sqrt(xDist*xDist + yDist*yDist)
-			if(trueDist < monster1Array[checkNumber].size + spell1Size){
-				monster1Array[checkNumber].health -= spell1Damage
-				spell1Array.splice(checkNumber2, 1)
+			if(trueDist < monster1Array[checkNumber].size + magicBlastSize){
+				monster1Array[checkNumber].health -= magicBlastDamage
+				magicBlastArray.splice(checkNumber2, 1)
 			}
 			checkNumber2++
 		}
@@ -733,68 +771,68 @@ function checkMonsters(){
 	}
 }
 //spells
-function spell1(){
-	spell1Timer = spell1CooldownTime
-	spell1Array.push(new Spell1Projectile(Player.xPos,Player.yPos, facingDirection))
+function magicBlast(){
+	magicBlastTimer = magicBlastCooldownTime
+	magicBlastArray.push(new magicBlastProjectile(Player.xPos,Player.yPos, facingDirection))
 }
-class Spell1Projectile{
-	constructor(spell1X, spell1Y, spell1Direction){
-		this.xPos = spell1X
-		this.yPos = spell1Y
-		this.direction = spell1Direction
+class magicBlastProjectile{
+	constructor(magicBlastX, magicBlastY, magicBlastDirection){
+		this.xPos = magicBlastX
+		this.yPos = magicBlastY
+		this.direction = magicBlastDirection
 	}
 }
 function drawSpells(){
 	checkNumber = 0
-	while(checkNumber < spell1Array.length){
-		ctx.drawImage(spell1Image, spell1Array[checkNumber].xPos - spell1Size, spell1Array[checkNumber].yPos - spell1Size)
+	while(checkNumber < magicBlastArray.length){
+		ctx.drawImage(magicBlastImage, magicBlastArray[checkNumber].xPos - magicBlastSize, magicBlastArray[checkNumber].yPos - magicBlastSize)
 		checkNumber++
 	}
 
 }
 function checkSpells(){
 	checkNumber = 0
-	while(checkNumber < spell1Array.length){
-		if(spell1Array[checkNumber].xPos + spell1Size > WIDTH - WALLSIZE || spell1Array[checkNumber].yPos + spell1Size > HEIGHT - WALLSIZE || spell1Array[checkNumber].xPos - spell1Size < 0 + WALLSIZE || spell1Array[checkNumber].yPos - spell1Size < 0 + WALLSIZE){
-			spell1Array.splice(checkNumber,1)
+	while(checkNumber < magicBlastArray.length){
+		if(magicBlastArray[checkNumber].xPos + magicBlastSize > WIDTH - WALLSIZE || magicBlastArray[checkNumber].yPos + magicBlastSize > HEIGHT - WALLSIZE || magicBlastArray[checkNumber].xPos - magicBlastSize < 0 + WALLSIZE || magicBlastArray[checkNumber].yPos - magicBlastSize < 0 + WALLSIZE){
+			magicBlastArray.splice(checkNumber,1)
 		}
 		checkNumber++
 	}
 	while(numProjectiles > maxProjectiles){
-		spell1Array.splice(0,1)
+		magicBlastArray.splice(0,1)
 		numProjectiles--
 	}
 }
 function moveSpells(){
 	checkNumber = 0
-	while(checkNumber < spell1Array.length){
-		if(spell1Array[checkNumber].direction == "up"){
-			spell1Array[checkNumber].yPos -= spell1Speed
+	while(checkNumber < magicBlastArray.length){
+		if(magicBlastArray[checkNumber].direction == "up"){
+			magicBlastArray[checkNumber].yPos -= magicBlastSpeed
 		}
-		if(spell1Array[checkNumber].direction == "upLeft"){
-			spell1Array[checkNumber].xPos -= spell1Speed
-			spell1Array[checkNumber].yPos -= spell1Speed 
+		if(magicBlastArray[checkNumber].direction == "upLeft"){
+			magicBlastArray[checkNumber].xPos -= magicBlastSpeed
+			magicBlastArray[checkNumber].yPos -= magicBlastSpeed 
 		}
-		if(spell1Array[checkNumber].direction == "left"){
-			spell1Array[checkNumber].xPos -= spell1Speed
+		if(magicBlastArray[checkNumber].direction == "left"){
+			magicBlastArray[checkNumber].xPos -= magicBlastSpeed
 		}
-		if(spell1Array[checkNumber].direction == "downLeft"){
-			spell1Array[checkNumber].xPos -= spell1Speed
-			spell1Array[checkNumber].yPos += spell1Speed
+		if(magicBlastArray[checkNumber].direction == "downLeft"){
+			magicBlastArray[checkNumber].xPos -= magicBlastSpeed
+			magicBlastArray[checkNumber].yPos += magicBlastSpeed
 		}
-		if(spell1Array[checkNumber].direction == "down"){
-			spell1Array[checkNumber].yPos += spell1Speed
+		if(magicBlastArray[checkNumber].direction == "down"){
+			magicBlastArray[checkNumber].yPos += magicBlastSpeed
 		}
-		if(spell1Array[checkNumber].direction == "downRight"){
-			spell1Array[checkNumber].xPos += spell1Speed
-			spell1Array[checkNumber].yPos += spell1Speed
+		if(magicBlastArray[checkNumber].direction == "downRight"){
+			magicBlastArray[checkNumber].xPos += magicBlastSpeed
+			magicBlastArray[checkNumber].yPos += magicBlastSpeed
 		}
-		if(spell1Array[checkNumber].direction == "right"){
-			spell1Array[checkNumber].xPos += spell1Speed
+		if(magicBlastArray[checkNumber].direction == "right"){
+			magicBlastArray[checkNumber].xPos += magicBlastSpeed
 		}
-		if(spell1Array[checkNumber].direction == "upRight"){
-			spell1Array[checkNumber].xPos += spell1Speed
-			spell1Array[checkNumber].yPos -= spell1Speed
+		if(magicBlastArray[checkNumber].direction == "upRight"){
+			magicBlastArray[checkNumber].xPos += magicBlastSpeed
+			magicBlastArray[checkNumber].yPos -= magicBlastSpeed
 		}
 		checkNumber++
 	}
@@ -807,5 +845,5 @@ function drawDebugInfo(){
 	ctx.fillText(facingDirection, 1100, 60)
 	ctx.fillText(Player.health+" hp",1100, 700)
 	ctx.fillText(monster1Array.length+" monsters left",1100,80)
-	ctx.fillText(spell1Damage+" "+spell1Speed+" "+spell1CooldownTime,1050,750)
+	ctx.fillText(magicBlastDamage+" "+magicBlastSpeed+" "+magicBlastCooldownTime,1050,750)
 }
