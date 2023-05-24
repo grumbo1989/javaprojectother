@@ -16,6 +16,7 @@ const WIDTH = 1200
 const HEIGHT = 900
 const PLAYERSIZE = 25
 const WALLSIZE = 56
+const MAXSPEED = 8
 //variables (so many :I)
 var ctx
 var upPressed = false
@@ -61,6 +62,7 @@ var magicBlastArray = []
 var monster1Array = []
 var monster2Array = []
 var monster2ProjectileArray = []
+var monster2ProjectileSpeed = 5
 //images
 var heartUpgradeImage = new Image
 heartUpgradeImage.src = "heartUpgrade.png"
@@ -159,6 +161,10 @@ function updateCanvas(){
 			monster1Array[count].moveMonster1()
 			count++
 		}
+		count = 0
+		while(count < monster2Array.length){
+
+		}
 		checkSpells()
 		drawSpells()
 		drawPlayer()
@@ -225,14 +231,25 @@ function makeRewardVariety(type){
 		Reward.variety = "health"
 	}
 	if(type == "player"){
-		if(Math.random())
-		Reward.variety = "damage"
+		if(Math.ceil(Math.random()*2) == 1){
+			if(playerSpeed < MAXSPEED){
+				Reward.variety = "speed"
+			}else{
+				Reward.variety = "damage"
+			}
+		}else{
+			Reward.variety = "damage"
+		}	
 	}
 	if(type == "spell"){
 		Reward.variety = "spell"
 	}
 	if(type == "miniboss"){
-		Reward.variety = "newSpell"
+		if(Math.ceil(Math.random()*2) == 1){
+			Reward.variety = "largeHealth"
+		}else {
+			Reward.variety = "largeSpell"
+		}
 	}
 	if(type == "boss"){
 		Reward.variety = "newSpell"
@@ -246,6 +263,9 @@ function grantReward(variety){
 	if(variety == "damage"){
 		magicBlastDamage = magicBlastDamage * 1.1
 	}
+	if(variety == "speed"){
+		playerSpeed++
+	}
 	if(variety == "spell"){
 		random = Math.ceil(Math.random * 3)
 		if(random == 1){
@@ -255,6 +275,10 @@ function grantReward(variety){
 		}else if(random == 3){
 			magicBlastCooldownTime--
 		}
+	}
+	if(variety == "largeHealth"){
+		Player.maxHealth += 50
+		Player.health += 50
 	}
 }
 //room stuff
@@ -762,7 +786,7 @@ class Monster2{
 		this.phase = monster2Phase
 		this.cooldown = monster2Cooldown
 	}
-	moveMonster2(){
+	moveMonster2(){	
 		if(this.phase == "throw"){
 			
 		}else {
@@ -791,7 +815,6 @@ class Monster2{
 					if(this.xPos > Player.xPos){
 						this.xPos -= monster2Speed
 					}else if(this.xPos < Player.xPos){
-
 						this.xPos += monster2Speed
 					}
 				}
@@ -799,23 +822,45 @@ class Monster2{
 		}
 	}
 	throwMonster2Projectile(){
-		if(this.xPos < Player.xPos + PLAYERSIZE && this.xPos > Player.xPos - PLAYERSIZE && this.yPos > Player.yPos){
-			monster2ProjectileArray.push(new Monster2Projectile("up"))
-		}
-		if(this.yPos < Player.yPos + PLAYERSIZE && this.yPos > Player.yPos - PLAYERSIZE && this.xPos > Player.xPos){
-			monster2ProjectileArray.push(new Monster2Projectile("left"))
-		}
-		if(this.xPos < Player.xPos + PLAYERSIZE && this.xPos > Player.xPos - PLAYERSIZE && this.yPos < Player.yPos){
-			monster2ProjectileArray.push(new Monster2Projectile("down"))
-		}
-		if(this.yPos < Player.yPos + PLAYERSIZE && this.yPos > Player.yPos - PLAYERSIZE && this.xPos < Player.xPos){
-			monster2ProjectileArray.push(new Monster2Projectile("right"))
+		if(this.cooldown == 0){
+			//will only throw when the projectile will hit the player (if they were to not move once it was thrown)
+			if(this.xPos < Player.xPos + PLAYERSIZE && this.xPos > Player.xPos - PLAYERSIZE && this.yPos > Player.yPos){
+				monster2ProjectileArray.push(new Monster2Projectile(this.xPos,this.yPos,"up"))
+				this.cooldown = 100
+			}
+			if(this.yPos < Player.yPos + PLAYERSIZE && this.yPos > Player.yPos - PLAYERSIZE && this.xPos > Player.xPos){
+				monster2ProjectileArray.push(new Monster2Projectile(this.xPos,this.yPos,"left"))
+				this.cooldown = 100
+			}
+			if(this.xPos < Player.xPos + PLAYERSIZE && this.xPos > Player.xPos - PLAYERSIZE && this.yPos < Player.yPos){
+				monster2ProjectileArray.push(new Monster2Projectile(this.xPos,this.yPos,"down"))
+				this.cooldown = 100
+			}
+			if(this.yPos < Player.yPos + PLAYERSIZE && this.yPos > Player.yPos - PLAYERSIZE && this.xPos < Player.xPos){
+				monster2ProjectileArray.push(new Monster2Projectile(this.xPos,this.yPos,"right"))
+				this.cooldown = 100
+			}
+		}else{
+			this.cooldown--
 		}
 	}
 }
 class Monster2Projectile{
-	constructor(monster2ProjectileDirection){
+	constructor(monster2projectileX,monster2projectileY,monster2ProjectileDirection){
+		this.xPos = monster2projectileX
+		this.yPos = monster2projectileY
 		this.direction = monster2ProjectileDirection
+	}
+	moveMonster2Projectile(){
+		if(this.direction == "up"){
+			this.yPos -= monster2ProjectileSpeed
+		}else if(this.direction == "left"){
+			this.xPos -= monster2ProjectileSpeed
+		}else if(this.direction == "down"){
+			this.yPos += monster2ProjectileSpeed
+		}else if(this.direction == "right"){
+			this.xPos += monster2ProjectileSpeed
+		}	
 	}
 }
 function drawMonsters(){
