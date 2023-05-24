@@ -2,9 +2,14 @@
 * title: pewpew game (placeholder)
 * date: 14/04/23
 * author: me
-* version: 4.4
+* version: 5.2
 vvv IMPORTANT: 
 all music and sprites are made by me unless specified :]
+NOTES TO ME IN THE FUTURE
+finish the code for the projectile throwing guy
+currently nothing works there is just framework
+idk what im gonna do for the movement but im thinking of like an invisible track and
+it will move along it away from the player
 **/
 //constants
 const WIDTH = 1200
@@ -54,6 +59,8 @@ var possibleRewards = ["health","spell","player","miniboss","boss"]
 var magicBlastArray = []
 //enemiesd
 var monster1Array = []
+var monster2Array = []
+var monster2ProjectileArray = []
 //images
 var heartUpgradeImage = new Image
 heartUpgradeImage.src = "heartUpgrade.png"
@@ -143,7 +150,9 @@ function updateCanvas(){
 		drawDebugInfo()
 	}
 	numProjectiles = magicBlastArray.length
+	numMonsters = monster1Array.length + monster2Array.length
 	if(dead == "false"){
+		updateHealthBar()
 		moveSpells()
 		count = 0
 		while(count < monster1Array.length){
@@ -158,7 +167,7 @@ function updateCanvas(){
 	}else{
 		inControl = "false"
 	}
-	if(monster1Array.length == "0"){
+	if(numMonsters == "0"){
 		if(Reward.state == "0"){
 			Reward.state = "1"	
 			makeRewardVariety(Reward.type)
@@ -442,6 +451,29 @@ function youLostLmao(){
 	ctx.fillStyle = "blue"
 	ctx.fillRect(450,450,300,100)
 }
+//health bar
+function updateHealthBar(){
+	count = 0
+	while(count < Player.maxHealth/25){
+		count++
+		if(Player.health - (Player.maxHealth - count * 25) >= 25){
+			ctx.fillStyle = "#DC143C"
+		}else if(Player.health - (Player.maxHealth - count * 25) >= 20){
+			ctx.fillStyle = "#BB1133"
+		}else if(Player.health - (Player.maxHealth - count * 25) >= 15){
+			ctx.fillStyle = "#8C0D26"
+		}else if(Player.health - (Player.maxHealth - count * 25) >= 10){
+			ctx.fillStyle = "#5D091A"
+		}else if(Player.health - (Player.maxHealth - count * 25) >= 5){
+			ctx.fillStyle = "#2F040D"
+		}else {
+			ctx.fillStyle = "#000000"
+		}
+		ctx.beginPath()
+		ctx.arc((50 + Player.maxHealth * 2) - (count -1) * 50, 800, 20, 0, 2*Math.PI)
+		ctx.fill()
+	}
+}
 //movement
 window.addEventListener('keydown', keyDownFunction)
 function keyDownFunction(keyboardEvent){
@@ -720,6 +752,72 @@ class Monster1{
 		}
 	}
 }
+class Monster2{
+	//will run away from the player while throwing x amount of projectiles at them then start chasing them normally when they run out of projectiles
+	constructor(monster2X,monster2Y,monster2Health,monster2ProjectilesLeft,monster2Phase,monster2Cooldown){
+		this.xPos = monster2X
+		this.yPos = monster2Y
+		this.health = monster2Health
+		this.projectilesLeft = monster2ProjectilesLeft
+		this.phase = monster2Phase
+		this.cooldown = monster2Cooldown
+	}
+	moveMonster2(){
+		if(this.phase == "throw"){
+			
+		}else {
+			//start chasing the player like normal
+			if(this.xPos == Player.xPos){
+				if(this.yPos > Player.yPos){
+					this.yPos -= monster2Speed
+				}else if(this.yPos < Player.yPos){
+					this.yPos += monster2Speed
+				}
+			}else if(this.yPos == Player.yPos){
+				if(this.xPos > Player.xPos){
+					this.xPos -= monster2Speed
+				}else if(this.xPos < Player.xPos){
+					this.xPos += monster2Speed
+				}
+			}else {
+				random = Math.ceil(Math.random()*2)
+				if(random == 1){
+					if(this.yPos > Player.yPos){
+						this.yPos -= monster2Speed
+					}else if(this.yPos < Player.yPos){
+						this.yPos += monster2Speed
+					}
+				}else {
+					if(this.xPos > Player.xPos){
+						this.xPos -= monster2Speed
+					}else if(this.xPos < Player.xPos){
+
+						this.xPos += monster2Speed
+					}
+				}
+			}
+		}
+	}
+	throwMonster2Projectile(){
+		if(this.xPos < Player.xPos + PLAYERSIZE && this.xPos > Player.xPos - PLAYERSIZE && this.yPos > Player.yPos){
+			monster2ProjectileArray.push(new Monster2Projectile("up"))
+		}
+		if(this.yPos < Player.yPos + PLAYERSIZE && this.yPos > Player.yPos - PLAYERSIZE && this.xPos > Player.xPos){
+			monster2ProjectileArray.push(new Monster2Projectile("left"))
+		}
+		if(this.xPos < Player.xPos + PLAYERSIZE && this.xPos > Player.xPos - PLAYERSIZE && this.yPos < Player.yPos){
+			monster2ProjectileArray.push(new Monster2Projectile("down"))
+		}
+		if(this.yPos < Player.yPos + PLAYERSIZE && this.yPos > Player.yPos - PLAYERSIZE && this.xPos < Player.xPos){
+			monster2ProjectileArray.push(new Monster2Projectile("right"))
+		}
+	}
+}
+class Monster2Projectile{
+	constructor(monster2ProjectileDirection){
+		this.direction = monster2ProjectileDirection
+	}
+}
 function drawMonsters(){
 	checkNumber = 0
 	while(checkNumber < monster1Array.length){
@@ -769,6 +867,7 @@ function checkMonsters(){
 		}
 		checkNumber++
 	}
+	
 }
 //spells
 function magicBlast(){
