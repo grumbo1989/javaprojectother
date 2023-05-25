@@ -40,7 +40,7 @@ var magicBlastCooldownTime = 15
 var numProjectiles = 0
 var maxProjectiles = 500
 var debugInfoOn = 0
-var roomNum = 0
+var roomNum = 1
 var checkNumber = 0
 var checkNumber2 = 0
 var xDist = 0
@@ -61,8 +61,10 @@ var magicBlastArray = []
 //enemiesd
 var monster1Array = []
 var monster2Array = []
+var monster2Size = 18
 var monster2ProjectileArray = []
 var monster2ProjectileSpeed = 5
+var monster2ProjectileSize = 4
 //images
 var heartUpgradeImage = new Image
 heartUpgradeImage.src = "heartUpgrade.png"
@@ -151,6 +153,9 @@ function updateCanvas(){
 	if(debugInfoOn=="1"){
 		drawDebugInfo()
 	}
+	ctx.font = "30px Papyrus"
+	ctx.fillStyle = "black"
+	ctx.fillText("Room "+roomNum,60,90)
 	numProjectiles = magicBlastArray.length
 	numMonsters = monster1Array.length + monster2Array.length
 	if(dead == "false"){
@@ -262,6 +267,7 @@ function grantReward(variety){
 	}
 	if(variety == "damage"){
 		magicBlastDamage = magicBlastDamage * 1.1
+		magicBlastDamage = (Math.ceil(magicBlastDamage*5))/5
 	}
 	if(variety == "speed"){
 		playerSpeed++
@@ -270,6 +276,7 @@ function grantReward(variety){
 		random = Math.ceil(Math.random * 3)
 		if(random == 1){
 			magicBlastDamage = magicBlastDamage * 1.2
+			magicBlastDamage = (Math.ceil(magicBlastDamage*5))/5
 		}else if(random == 2){
 			magicBlastSpeed = magicBlastSpeed + 1
 		}else if(random == 3){
@@ -279,6 +286,12 @@ function grantReward(variety){
 	if(variety == "largeHealth"){
 		Player.maxHealth += 50
 		Player.health += 50
+	}
+	if(variety == "largeSpell"){
+		magicBlastDamage = magicBlastDamage * 1.2
+		magicBlastDamage = (Math.ceil(magicBlastDamage*5))/5
+		magicBlastSpeed = magicBlastSpeed + 1
+		magicBlastCooldownTime--
 	}
 }
 //room stuff
@@ -306,7 +319,7 @@ function nextRoomsReward(){
 	random = Math.floor(Math.random()*possibleRewards.length)
 	Room.rightDoor = possibleRewards[random]
 	possibleRewards.splice(random, 1)
-	if(roomNum / (Math.floor(roomNum / 10)) == 0){
+	if((roomNum + 1) / (Math.floor((roomNum + 1) / 10)) == 0){
 		Room.upDoor = "boss"
 		Room.leftDoor = "boss"
 		Room.downDoor = "boss"
@@ -423,6 +436,7 @@ function generateNewRoom(lastRoomReward, entryDoor, lastRoomVariant){
 		monster1Array.push(new Monster1(300,400,15,20, 5, 2))
 		monster1Array.push(new Monster1(500,200,15,20, 5, 2))
 		monster1Array.push(new Monster1(400,600,15,20, 5, 2))
+		//monster2Array.push(new Monster2(500,400,30,6,"throw",5))
 	}
 	Reward.state = 0
 }
@@ -516,10 +530,10 @@ function keyDownFunction(keyboardEvent){
 		if (keyDown=="d"){
 			rightPressed = "true"
 		}
-		if (keyDown=="f" && dashTimer == "0"){
+		if (keyDown==" " && dashTimer == "0"){
 			dash()
 		}
-		if (keyDown=="1" && magicBlastTimer == "0"){
+		if (keyDown=="h" && magicBlastTimer == "0"){
 			magicBlast()
 		}
 		if (keyDown=="p"){
@@ -746,13 +760,13 @@ class Monster1{
 		this.speed = monster1Speed
 	}
 	moveMonster1(){
-		if(this.xPos == Player.xPos){
+		if(this.xPos >= Player.xPos - this.size && this.xPos <= Player.xPos + this.size){
 			if(this.yPos > Player.yPos){
 				this.yPos -= this.speed
 			}else if(this.yPos < Player.yPos){
 				this.yPos += this.speed
 			}
-		}else if(this.yPos == Player.yPos){
+		}else if(this.yPos >= Player.yPos - this.size && this.yPos <= Player.yPos + this.size){
 			if(this.xPos > Player.xPos){
 				this.xPos -= this.speed
 			}else if(this.xPos < Player.xPos){
@@ -787,36 +801,31 @@ class Monster2{
 		this.cooldown = monster2Cooldown
 	}
 	moveMonster2(){	
-		if(this.phase == "throw"){
-			
+		if(this.xPos >= Player.xPos - this.size && this.xPos <= Player.xPos + this.size){
+			if(this.yPos > Player.yPos){
+				this.yPos -= monster2Speed
+			}else if(this.yPos < Player.yPos){
+				this.yPos += monster2Speed
+			}
+		}else if(this.yPos >= Player.yPos - this.size && this.yPos <= Player.yPos + this.size){
+			if(this.xPos > Player.xPos){
+				this.xPos -= monster2Speed
+			}else if(this.xPos < Player.xPos){
+				this.xPos += monster2Speed
+			}
 		}else {
-			//start chasing the player like normal
-			if(this.xPos == Player.xPos){
+			random = Math.ceil(Math.random()*2)
+			if(random == 1){
 				if(this.yPos > Player.yPos){
 					this.yPos -= monster2Speed
 				}else if(this.yPos < Player.yPos){
 					this.yPos += monster2Speed
 				}
-			}else if(this.yPos == Player.yPos){
+			}else {
 				if(this.xPos > Player.xPos){
 					this.xPos -= monster2Speed
 				}else if(this.xPos < Player.xPos){
 					this.xPos += monster2Speed
-				}
-			}else {
-				random = Math.ceil(Math.random()*2)
-				if(random == 1){
-					if(this.yPos > Player.yPos){
-						this.yPos -= monster2Speed
-					}else if(this.yPos < Player.yPos){
-						this.yPos += monster2Speed
-					}
-				}else {
-					if(this.xPos > Player.xPos){
-						this.xPos -= monster2Speed
-					}else if(this.xPos < Player.xPos){
-						this.xPos += monster2Speed
-					}
 				}
 			}
 		}
@@ -869,6 +878,22 @@ function drawMonsters(){
 		ctx.fillStyle = "#2F4F4F"
 		ctx.beginPath()
 		ctx.arc(monster1Array[checkNumber].xPos,monster1Array[checkNumber].yPos, monster1Array[checkNumber].size, 0, 2*Math.PI)
+		ctx.fill()
+		checkNumber++
+	}
+	checkNumber = 0
+	while(checkNumber < monster2Array.length){
+		ctx.fillStyle = "#DCDCDC"
+		ctx.beginPath()
+		ctx.arc(monster2Array[checkNumber].xPos,monster2Array[checkNumber].yPos, monster2Size, 0, 2*Math.PI)
+		ctx.fill()
+		checkNumber++
+	}
+	checkNumber = 0
+	while(checkNumber < monster2ProjectileArray.length){
+		ctx.fillStyle = "#808080"
+		ctx.beginPath()
+		ctx.arc(monster2ProjectileArray[checkNumber].xPos,monster2ProjectileArray[checkNumber].yPos, monster2ProjectileSize, 0, 2*Math.PI)
 		ctx.fill()
 		checkNumber++
 	}
