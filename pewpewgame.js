@@ -2,14 +2,11 @@
 * title: pewpew game (placeholder)
 * date: 14/04/23
 * author: me
-* version: 5.2
+* version: 6.2
 vvv IMPORTANT: 
 all music and sprites are made by me unless specified :]
 NOTES TO ME IN THE FUTURE
-finish the code for the projectile throwing guy
-currently nothing works there is just framework
-idk what im gonna do for the movement but im thinking of like an invisible track and
-it will move along it away from the player
+
 **/
 //constants
 const WIDTH = 1200
@@ -54,6 +51,7 @@ var rewardSize = 24
 var rewardPreviewSize = 30
 var dead = "false"
 var random
+var coinCount = 0
 //arrays
 var possibleRewards = ["health","spell","player","miniboss","boss"]
 //spells
@@ -62,9 +60,12 @@ var magicBlastArray = []
 var monster1Array = []
 var monster2Array = []
 var monster2Size = 18
-var monster2ProjectileArray = []
-var monster2ProjectileSpeed = 5
-var monster2ProjectileSize = 4
+var monster2Speed = 1
+var monster2ContactDamage = 3
+var monster2ProjDamage = 8
+var monster2ProjArray = []
+var monster2ProjSpeed = 5
+var monster2ProjSize = 4
 //images
 var heartUpgradeImage = new Image
 heartUpgradeImage.src = "heartUpgrade.png"
@@ -156,6 +157,8 @@ function updateCanvas(){
 	ctx.font = "30px Papyrus"
 	ctx.fillStyle = "black"
 	ctx.fillText("Room "+roomNum,60,90)
+	ctx.fillStyle = "gold"
+	ctx.fillText(coinCount+" Coins",1020,90)
 	numProjectiles = magicBlastArray.length
 	numMonsters = monster1Array.length + monster2Array.length
 	if(dead == "false"){
@@ -168,12 +171,21 @@ function updateCanvas(){
 		}
 		count = 0
 		while(count < monster2Array.length){
-
+			monster2Array[count].moveMonster2()
+			monster2Array[count].throwmonster2Proj()
+			count++
+		}
+		count = 0
+		while(count < monster2ProjArray.length){
+			monster2ProjArray[count].movemonster2Proj()
+			count++
 		}
 		checkSpells()
 		drawSpells()
 		drawPlayer()
 		checkMonsters()
+		checkMonsters2()
+		checkMonster2Proj()
 		drawMonsters()
 	}else{
 		inControl = "false"
@@ -433,10 +445,23 @@ function generateNewRoom(lastRoomReward, entryDoor, lastRoomVariant){
 	if(Reward.type == "miniboss"){
 		monster1Array.push(new Monster1(600, 450, 80, 45, 14, 3))
 	}else{
-		monster1Array.push(new Monster1(300,400,15,20, 5, 2))
-		monster1Array.push(new Monster1(500,200,15,20, 5, 2))
-		monster1Array.push(new Monster1(400,600,15,20, 5, 2))
-		//monster2Array.push(new Monster2(500,400,30,6,"throw",5))
+		random = Math.ceil(Math.random()*3)
+		if(random == 1 || roomNum == 1){
+			monster1Array.push(new Monster1(300,400,30,20, 5, 2))
+			monster1Array.push(new Monster1(500,200,30,20, 5, 2))
+			monster1Array.push(new Monster1(400,600,30,20, 5, 2))
+		}else if(random == 2){
+			monster2Array.push(new Monster2(400,500,15,100))
+			monster2Array.push(new Monster2(500,400,15,100))
+			monster2Array.push(new Monster2(600,300,15,100))
+			monster2Array.push(new Monster2(700,200,15,100))
+			monster2Array.push(new Monster2(600,500,15,100))
+		}else{
+			monster1Array.push(new Monster1(400,400,30,20, 5, 2))
+			monster1Array.push(new Monster1(500,200,30,20, 5, 2))
+			monster2Array.push(new Monster2(700,300,15,100))
+			monster2Array.push(new Monster2(500,300,15,100))
+		}
 	}
 	Reward.state = 0
 }
@@ -515,7 +540,6 @@ function updateHealthBar(){
 //movement
 window.addEventListener('keydown', keyDownFunction)
 function keyDownFunction(keyboardEvent){
-	
 	var keyDown = keyboardEvent.key
 	if(inControl == "true"){
 		if (keyDown=="w"){
@@ -792,22 +816,20 @@ class Monster1{
 }
 class Monster2{
 	//will run away from the player while throwing x amount of projectiles at them then start chasing them normally when they run out of projectiles
-	constructor(monster2X,monster2Y,monster2Health,monster2ProjectilesLeft,monster2Phase,monster2Cooldown){
+	constructor(monster2X,monster2Y,monster2Health,monster2Cooldown){
 		this.xPos = monster2X
 		this.yPos = monster2Y
 		this.health = monster2Health
-		this.projectilesLeft = monster2ProjectilesLeft
-		this.phase = monster2Phase
 		this.cooldown = monster2Cooldown
 	}
 	moveMonster2(){	
-		if(this.xPos >= Player.xPos - this.size && this.xPos <= Player.xPos + this.size){
+		if(this.xPos >= Player.xPos - monster2Size && this.xPos <= Player.xPos + monster2Size){
 			if(this.yPos > Player.yPos){
 				this.yPos -= monster2Speed
 			}else if(this.yPos < Player.yPos){
 				this.yPos += monster2Speed
 			}
-		}else if(this.yPos >= Player.yPos - this.size && this.yPos <= Player.yPos + this.size){
+		}else if(this.yPos >= Player.yPos - monster2Size && this.yPos <= Player.yPos + monster2Size){
 			if(this.xPos > Player.xPos){
 				this.xPos -= monster2Speed
 			}else if(this.xPos < Player.xPos){
@@ -830,23 +852,23 @@ class Monster2{
 			}
 		}
 	}
-	throwMonster2Projectile(){
+	throwmonster2Proj(){
 		if(this.cooldown == 0){
 			//will only throw when the projectile will hit the player (if they were to not move once it was thrown)
 			if(this.xPos < Player.xPos + PLAYERSIZE && this.xPos > Player.xPos - PLAYERSIZE && this.yPos > Player.yPos){
-				monster2ProjectileArray.push(new Monster2Projectile(this.xPos,this.yPos,"up"))
+				monster2ProjArray.push(new monster2Proj(this.xPos,this.yPos,"up"))
 				this.cooldown = 100
 			}
 			if(this.yPos < Player.yPos + PLAYERSIZE && this.yPos > Player.yPos - PLAYERSIZE && this.xPos > Player.xPos){
-				monster2ProjectileArray.push(new Monster2Projectile(this.xPos,this.yPos,"left"))
+				monster2ProjArray.push(new monster2Proj(this.xPos,this.yPos,"left"))
 				this.cooldown = 100
 			}
 			if(this.xPos < Player.xPos + PLAYERSIZE && this.xPos > Player.xPos - PLAYERSIZE && this.yPos < Player.yPos){
-				monster2ProjectileArray.push(new Monster2Projectile(this.xPos,this.yPos,"down"))
+				monster2ProjArray.push(new monster2Proj(this.xPos,this.yPos,"down"))
 				this.cooldown = 100
 			}
 			if(this.yPos < Player.yPos + PLAYERSIZE && this.yPos > Player.yPos - PLAYERSIZE && this.xPos < Player.xPos){
-				monster2ProjectileArray.push(new Monster2Projectile(this.xPos,this.yPos,"right"))
+				monster2ProjArray.push(new monster2Proj(this.xPos,this.yPos,"right"))
 				this.cooldown = 100
 			}
 		}else{
@@ -854,21 +876,21 @@ class Monster2{
 		}
 	}
 }
-class Monster2Projectile{
-	constructor(monster2projectileX,monster2projectileY,monster2ProjectileDirection){
-		this.xPos = monster2projectileX
-		this.yPos = monster2projectileY
-		this.direction = monster2ProjectileDirection
+class monster2Proj{
+	constructor(monster2ProjX,monster2ProjY,monster2ProjDirection){
+		this.xPos = monster2ProjX
+		this.yPos = monster2ProjY
+		this.direction = monster2ProjDirection
 	}
-	moveMonster2Projectile(){
+	movemonster2Proj(){
 		if(this.direction == "up"){
-			this.yPos -= monster2ProjectileSpeed
+			this.yPos -= monster2ProjSpeed
 		}else if(this.direction == "left"){
-			this.xPos -= monster2ProjectileSpeed
+			this.xPos -= monster2ProjSpeed
 		}else if(this.direction == "down"){
-			this.yPos += monster2ProjectileSpeed
+			this.yPos += monster2ProjSpeed
 		}else if(this.direction == "right"){
-			this.xPos += monster2ProjectileSpeed
+			this.xPos += monster2ProjSpeed
 		}	
 	}
 }
@@ -890,10 +912,10 @@ function drawMonsters(){
 		checkNumber++
 	}
 	checkNumber = 0
-	while(checkNumber < monster2ProjectileArray.length){
+	while(checkNumber < monster2ProjArray.length){
 		ctx.fillStyle = "#808080"
 		ctx.beginPath()
-		ctx.arc(monster2ProjectileArray[checkNumber].xPos,monster2ProjectileArray[checkNumber].yPos, monster2ProjectileSize, 0, 2*Math.PI)
+		ctx.arc(monster2ProjArray[checkNumber].xPos,monster2ProjArray[checkNumber].yPos, monster2ProjSize, 0, 2*Math.PI)
 		ctx.fill()
 		checkNumber++
 	}
@@ -934,17 +956,77 @@ function checkMonsters(){
 	while(checkNumber < monster1Array.length){
 		if(monster1Array[checkNumber].health < 1){
 			monster1Array.splice(checkNumber,1)
+			if(Math.ceil(Math.random() * 3) == 2){
+				coinCount += Math.floor(Math.random() * 5) + 5
+			}
 		}
 		checkNumber++
 	}
-	
+}
+function checkMonsters2(){
+	checkNumber = 0
+	while(checkNumber < monster2Array.length){
+		xDist = Player.xPos -  monster2Array[checkNumber].xPos
+		yDist = Player.yPos -  monster2Array[checkNumber].yPos
+		trueDist = Math.sqrt(xDist*xDist + yDist*yDist)
+		if(trueDist < monster2Size + PLAYERSIZE && iFrames == 0){
+			Player.health -= monster2ContactDamage
+			iFrames = 30
+		}
+		checkNumber++
+	}
+	checkNumber = 0
+	while(checkNumber < monster2Array.length){
+		checkNumber2 = 0
+		while(checkNumber2 < magicBlastArray.length){
+			xDist = monster2Array[checkNumber].xPos -  magicBlastArray[checkNumber2].xPos
+			yDist = monster2Array[checkNumber].yPos -  magicBlastArray[checkNumber2].yPos
+			trueDist = Math.sqrt(xDist*xDist + yDist*yDist)
+			if(trueDist < monster2Size + magicBlastSize){
+				monster2Array[checkNumber].health -= magicBlastDamage
+				magicBlastArray.splice(checkNumber2, 1)
+			}
+			checkNumber2++
+		}
+		checkNumber++
+	}
+	checkNumber = 0
+	while(checkNumber < monster2Array.length){
+		if(monster2Array[checkNumber].health < 1){
+			monster2Array.splice(checkNumber,1)
+			if(Math.ceil(Math.random() * 3) == 2){
+				coinCount += Math.floor(Math.random() * 5) + 5
+			}
+		}
+		checkNumber++
+	}
+}
+function checkMonster2Proj(){
+	checkNumber = 0
+	while(checkNumber < monster2ProjArray.length){
+		if(monster2ProjArray[checkNumber].xPos + monster2ProjSize > WIDTH - WALLSIZE || monster2ProjArray[checkNumber].yPos + monster2ProjSize > HEIGHT - WALLSIZE || monster2ProjArray[checkNumber].xPos - monster2ProjSize < 0 + WALLSIZE || monster2ProjArray[checkNumber].yPos - monster2ProjSize < 0 + WALLSIZE){
+			monster2ProjArray.splice(checkNumber,1)
+		}
+		checkNumber++
+	}
+	checkNumber = 0
+	while(checkNumber < monster2ProjArray.length){
+		xDist = Player.xPos -  monster2ProjArray[checkNumber].xPos
+		yDist = Player.yPos -  monster2ProjArray[checkNumber].yPos
+		trueDist = Math.sqrt(xDist*xDist + yDist*yDist)
+		if(trueDist < PLAYERSIZE + monster2ProjSize){
+			Player.health -= monster2ProjDamage
+			monster2ProjArray.splice(checkNumber, 1)
+		}
+		checkNumber++
+	}
 }
 //spells
 function magicBlast(){
 	magicBlastTimer = magicBlastCooldownTime
-	magicBlastArray.push(new magicBlastProjectile(Player.xPos,Player.yPos, facingDirection))
+	magicBlastArray.push(new MagicBlastProjectile(Player.xPos,Player.yPos, facingDirection))
 }
-class magicBlastProjectile{
+class MagicBlastProjectile{
 	constructor(magicBlastX, magicBlastY, magicBlastDirection){
 		this.xPos = magicBlastX
 		this.yPos = magicBlastY
