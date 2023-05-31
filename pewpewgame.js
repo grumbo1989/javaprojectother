@@ -2,11 +2,11 @@
 * title: pewpew game (placeholder)
 * date: 14/04/23
 * author: me
-* version: 6.2
+* version: 6.3
 vvv IMPORTANT: 
 all music and sprites are made by me unless specified :]
 NOTES TO ME IN THE FUTURE
-
+idk do the thing and dont fail :()
 **/
 //constants
 const WIDTH = 1200
@@ -30,10 +30,10 @@ var dashCooldown = 1 //time between dashes
 var mouseX = 0
 var mouseY = 0
 var magicBlastTimer = 0
-var magicBlastSize = 6
+var magicBlastSize = 5
 var magicBlastSpeed = 5
-var magicBlastDamage = 5
-var magicBlastCooldownTime = 15
+var magicBlastDamage = 500
+var magicBlastCooldownTime = 1
 var numProjectiles = 0
 var maxProjectiles = 500
 var debugInfoOn = 0
@@ -104,7 +104,7 @@ function gameStart(){
 	Player.health = 75
 	Player.maxHealth = 75
 	Room.rewardX = 576
-	Room.rewardY = 200
+	Room.rewardY = 400
 	Room.state = 0
 	Room.upDoor = "closed"
 	Room.leftDoor = "closed"
@@ -163,7 +163,11 @@ function updateCanvas(){
 	numMonsters = monster1Array.length + monster2Array.length
 	if(dead == "false"){
 		updateHealthBar()
-		moveSpells()
+		count = 0
+		while(count < magicBlastArray.length){
+			magicBlastArray[count].moveMagicBlast()
+			count++
+		}
 		count = 0
 		while(count < monster1Array.length){
 			monster1Array[count].moveMonster1()
@@ -190,6 +194,16 @@ function updateCanvas(){
 	}else{
 		inControl = "false"
 	}
+	roomStateCheck()
+	if(loadingScreen > 0){
+		console.log(loadingScreen)
+		loadingScreen--
+		ctx.fillStyle = "black"
+		ctx.fillRect(0,0,WIDTH,HEIGHT)
+	}
+}
+//
+function roomStateCheck(){
 	if(numMonsters == "0"){
 		if(Reward.state == "0"){
 			Reward.state = "1"	
@@ -235,14 +249,7 @@ function updateCanvas(){
 			}
 		}
 	}
-	if(loadingScreen > 0){
-		console.log(loadingScreen)
-		loadingScreen--
-		ctx.fillStyle = "black"
-		ctx.fillRect(0,0,WIDTH,HEIGHT)
-	}
 }
-//
 function makeRewardVariety(type){
 	if(type == "health"){
 		Reward.variety = "health"
@@ -1017,6 +1024,7 @@ function checkMonster2Proj(){
 		if(trueDist < PLAYERSIZE + monster2ProjSize){
 			Player.health -= monster2ProjDamage
 			monster2ProjArray.splice(checkNumber, 1)
+			iFrames = 30
 		}
 		checkNumber++
 	}
@@ -1032,7 +1040,68 @@ class MagicBlastProjectile{
 		this.yPos = magicBlastY
 		this.direction = magicBlastDirection
 	}
+	moveMagicBlast(){
+		if(this.direction == "up"){
+			this.yPos -= magicBlastSpeed
+		}else if(this.direction == "upLeft"){
+			this.xPos -= magicBlastSpeed
+			this.yPos -= magicBlastSpeed 
+		}else if(this.direction == "left"){
+			this.xPos -= magicBlastSpeed
+		}else if(this.direction == "downLeft"){
+			this.xPos -= magicBlastSpeed
+			this.yPos += magicBlastSpeed
+		}else if(this.direction == "down"){
+			this.yPos += magicBlastSpeed
+		}else if(this.direction == "downRight"){
+			this.xPos += magicBlastSpeed
+			this.yPos += magicBlastSpeed
+		}else if(this.direction == "right"){
+			this.xPos += magicBlastSpeed
+		}else if(this.direction == "upRight"){
+			this.xPos += magicBlastSpeed
+			this.yPos -= magicBlastSpeed
+		}
+	}
 }
+//
+function fireball(){
+	fireballTimer = fireballCooldownTime
+	fireballArray.push(new FireballProjectile(Player.xPos,Player.yPos, facingDirection))
+}
+class FireballProjectile{
+	constructor(fireballX, fireballY, fireballDirection, fireballExploded, fireballSize){
+		this.xPos = fireballX
+		this.yPos = fireballY
+		this.direction = fireballDirection
+		this.exploded = fireballExploded
+		this.size = fireballSize
+	}
+	moveFireball(){
+		if(this.direction == "up"){
+			this.yPos -= fireballSpeed
+		}else if(this.direction == "upLeft"){
+			this.xPos -= fireballSpeed
+			this.yPos -= fireballSpeed 
+		}else if(this.direction == "left"){
+			this.xPos -= mfireballSpeed
+		}else if(this.direction == "downLeft"){
+			this.xPos -= fireballSpeed
+			this.yPos += fireballSpeed
+		}else if(this.direction == "down"){
+			this.yPos += fireballSpeed
+		}else if(this.direction == "downRight"){
+			this.xPos += fireballSpeed
+			this.yPos += fireballSpeed
+		}else if(this.direction == "right"){
+			this.xPos += fireballSpeed
+		}else if(this.direction == "upRight"){
+			this.xPos += fireballSpeed
+			this.yPos -= fireballSpeed
+		}
+	}
+}
+//
 function drawSpells(){
 	checkNumber = 0
 	while(checkNumber < magicBlastArray.length){
@@ -1052,40 +1121,6 @@ function checkSpells(){
 	while(numProjectiles > maxProjectiles){
 		magicBlastArray.splice(0,1)
 		numProjectiles--
-	}
-}
-function moveSpells(){
-	checkNumber = 0
-	while(checkNumber < magicBlastArray.length){
-		if(magicBlastArray[checkNumber].direction == "up"){
-			magicBlastArray[checkNumber].yPos -= magicBlastSpeed
-		}
-		if(magicBlastArray[checkNumber].direction == "upLeft"){
-			magicBlastArray[checkNumber].xPos -= magicBlastSpeed
-			magicBlastArray[checkNumber].yPos -= magicBlastSpeed 
-		}
-		if(magicBlastArray[checkNumber].direction == "left"){
-			magicBlastArray[checkNumber].xPos -= magicBlastSpeed
-		}
-		if(magicBlastArray[checkNumber].direction == "downLeft"){
-			magicBlastArray[checkNumber].xPos -= magicBlastSpeed
-			magicBlastArray[checkNumber].yPos += magicBlastSpeed
-		}
-		if(magicBlastArray[checkNumber].direction == "down"){
-			magicBlastArray[checkNumber].yPos += magicBlastSpeed
-		}
-		if(magicBlastArray[checkNumber].direction == "downRight"){
-			magicBlastArray[checkNumber].xPos += magicBlastSpeed
-			magicBlastArray[checkNumber].yPos += magicBlastSpeed
-		}
-		if(magicBlastArray[checkNumber].direction == "right"){
-			magicBlastArray[checkNumber].xPos += magicBlastSpeed
-		}
-		if(magicBlastArray[checkNumber].direction == "upRight"){
-			magicBlastArray[checkNumber].xPos += magicBlastSpeed
-			magicBlastArray[checkNumber].yPos -= magicBlastSpeed
-		}
-		checkNumber++
 	}
 }
 //debug info
