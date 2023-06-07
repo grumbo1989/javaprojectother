@@ -37,6 +37,8 @@ var magicBlastCooldownTime = 10
 var fireballTimer = 0
 var fireballCooldownTime = 20
 var fireballSpeed = 7
+var fireballExplosionSize = 50
+var fireballDamage = 10
 var numProjectiles = 0
 var maxProjectiles = 500
 var debugInfoOn = 0
@@ -986,6 +988,24 @@ function checkMonsters(){
 	}
 	checkNumber = 0
 	while(checkNumber < biteyArray.length){
+		checkNumber2 = 0
+		while(checkNumber2 < fireballArray.length){
+			if(collisionCheck(biteyArray[checkNumber].xPos,biteyArray[checkNumber].yPos,biteyArray[checkNumber].size,fireballArray[checkNumber2].xPos,fireballArray[checkNumber2].yPos,fireballArray[checkNumber2].size)){
+				if(fireballArray[checkNumber2].exploded == "true" && fireballArray[checkNumber2].iFrames == 0){
+					fireballArray[checkNumber2].iFrames = 15
+					biteyArray[checkNumber].health -= fireballDamage
+				}else {
+					fireballArray[checkNumber2].exploded = "true"
+					fireballArray[checkNumber2].timer = 25
+					fireballArray[checkNumber2].size = fireballExplosionSize
+				}
+			}
+			checkNumber2++
+		}
+		checkNumber++
+	}
+	checkNumber = 0
+	while(checkNumber < biteyArray.length){
 		if(biteyArray[checkNumber].health < 1){
 			biteyArray.splice(checkNumber,1)
 			if(Math.ceil(Math.random() * 3) == 2){
@@ -998,10 +1018,7 @@ function checkMonsters(){
 function checkMonsters2(){
 	checkNumber = 0
 	while(checkNumber < skeletonArray.length){
-		xDist = Player.xPos -  skeletonArray[checkNumber].xPos
-		yDist = Player.yPos -  skeletonArray[checkNumber].yPos
-		trueDist = Math.sqrt(xDist*xDist + yDist*yDist)
-		if(trueDist < skeletonSize + PLAYERSIZE && iFrames == 0){
+		if(collisionCheck(Player.xPos,Player.yPos,PLAYERSIZE,skeletonArray[checkNumber].xPos,skeletonArray[checkNumber].yPos,skeletonSize) && iFrames == 0){
 			Player.health -= skeletonContactDamage
 			iFrames = 30
 		}
@@ -1011,12 +1028,27 @@ function checkMonsters2(){
 	while(checkNumber < skeletonArray.length){
 		checkNumber2 = 0
 		while(checkNumber2 < magicBlastArray.length){
-			xDist = skeletonArray[checkNumber].xPos -  magicBlastArray[checkNumber2].xPos
-			yDist = skeletonArray[checkNumber].yPos -  magicBlastArray[checkNumber2].yPos
-			trueDist = Math.sqrt(xDist*xDist + yDist*yDist)
-			if(trueDist < skeletonSize + magicBlastSize){
+			if(collisionCheck(skeletonArray[checkNumber].xPos,skeletonArray[checkNumber].yPos,skeletonSize,magicBlastArray[checkNumber2].xPos,magicBlastArray[checkNumber2].yPos,magicBlastSize)){
 				skeletonArray[checkNumber].health -= magicBlastDamage
 				magicBlastArray.splice(checkNumber2, 1)
+			}
+			checkNumber2++
+		}
+		checkNumber++
+	}
+	checkNumber = 0
+	while(checkNumber < skeletonArray.length){
+		checkNumber2 = 0
+		while(checkNumber2 < fireballArray.length){
+			if(collisionCheck(skeletonArray[checkNumber].xPos,skeletonArray[checkNumber].yPos,skeletonSize,fireballArray[checkNumber2].xPos,fireballArray[checkNumber2].yPos,fireballArray[checkNumber2].size)){
+				if(fireballArray[checkNumber2].exploded == "true" && fireballArray[checkNumber2].iFrames == 0){
+					fireballArray[checkNumber2].iFrames = 15
+					skeletonArray[checkNumber].health -= fireballDamage
+				}else {
+					fireballArray[checkNumber2].exploded = "true"
+					fireballArray[checkNumber2].timer = 25
+					fireballArray[checkNumber2].size = fireballExplosionSize
+				}
 			}
 			checkNumber2++
 		}
@@ -1043,10 +1075,7 @@ function checkSkeletonProj(){
 	}
 	checkNumber = 0
 	while(checkNumber < skeletonProjArray.length){
-		xDist = Player.xPos -  skeletonProjArray[checkNumber].xPos
-		yDist = Player.yPos -  skeletonProjArray[checkNumber].yPos
-		trueDist = Math.sqrt(xDist*xDist + yDist*yDist)
-		if(trueDist < PLAYERSIZE + skeletonProjSize){
+		if(collisionCheck(Player.xPos,Player.yPos,PLAYERSIZE,skeletonProjArray[checkNumber].xPos,skeletonProjArray[checkNumber].yPos,skeletonProjSize)){
 			Player.health -= skeletonProjDamage
 			skeletonProjArray.splice(checkNumber, 1)
 			iFrames = 30
@@ -1092,37 +1121,57 @@ class MagicBlastProjectile{
 //
 function fireball(){
 	fireballTimer = fireballCooldownTime
-	fireballArray.push(new FireballProjectile(Player.xPos,Player.yPos, facingDirection, false, 4))
+	fireballArray.push(new FireballProjectile(Player.xPos,Player.yPos, facingDirection, "false", 4, 60, 0))
 }
 class FireballProjectile{
-	constructor(fireballX, fireballY, fireballDirection, fireballExploded, fireballSize){
+	constructor(fireballX, fireballY, fireballDirection, fireballExploded, fireballSize, fireballTimer, fireballIFrames){
 		this.xPos = fireballX
 		this.yPos = fireballY
 		this.direction = fireballDirection
 		this.exploded = fireballExploded
 		this.size = fireballSize
+		this.timer = fireballTimer
+		this.iFrames = fireballIFrames
 	}
 	moveFireball(){
-		if(this.direction == "up"){
-			this.yPos -= fireballSpeed
-		}else if(this.direction == "upLeft"){
-			this.xPos -= fireballSpeed
-			this.yPos -= fireballSpeed 
-		}else if(this.direction == "left"){
-			this.xPos -= mfireballSpeed
-		}else if(this.direction == "downLeft"){
-			this.xPos -= fireballSpeed
-			this.yPos += fireballSpeed
-		}else if(this.direction == "down"){
-			this.yPos += fireballSpeed
-		}else if(this.direction == "downRight"){
-			this.xPos += fireballSpeed
-			this.yPos += fireballSpeed
-		}else if(this.direction == "right"){
-			this.xPos += fireballSpeed
-		}else if(this.direction == "upRight"){
-			this.xPos += fireballSpeed
-			this.yPos -= fireballSpeed
+		if(this.iFrames > 0){
+			this.iFrames--
+		}
+		if(this.exploded == "false"){
+			if(this.timer < 1){
+				this.exploded = "true"
+				this.timer = 25
+				this.size = fireballExplosionSize
+			}else {
+				if(this.direction == "up"){
+					this.yPos -= fireballSpeed
+				}else if(this.direction == "upLeft"){
+					this.xPos -= fireballSpeed
+					this.yPos -= fireballSpeed 
+				}else if(this.direction == "left"){
+					this.xPos -= fireballSpeed
+				}else if(this.direction == "downLeft"){
+					this.xPos -= fireballSpeed
+					this.yPos += fireballSpeed
+				}else if(this.direction == "down"){
+					this.yPos += fireballSpeed
+				}else if(this.direction == "downRight"){
+					this.xPos += fireballSpeed
+					this.yPos += fireballSpeed
+				}else if(this.direction == "right"){
+					this.xPos += fireballSpeed
+				}else if(this.direction == "upRight"){
+					this.xPos += fireballSpeed
+					this.yPos -= fireballSpeed
+				}
+				this.timer--
+			}
+		}else {
+			if(this.timer > 0){
+				this.timer--
+			}else{
+
+			}
 		}
 	}
 }
@@ -1156,15 +1205,20 @@ function checkSpells(){
 		numProjectiles--
 	}
 	checkNumber = 0
-	while(checkNumber < magicBlastArray.length){
-		if(fireballArray[checkNumber].xPos + 4 > WIDTH - WALLSIZE || fireballArray[checkNumber].yPos + 4 > HEIGHT - WALLSIZE || fireballArray[checkNumber].xPos - 4 < 0 + WALLSIZE || fireballArray[checkNumber].yPos - 4 < 0 + WALLSIZE){
-			fireballArray.splice(checkNumber,1)
+	while(checkNumber < fireballArray.length){
+		if((fireballArray[checkNumber].xPos + 4 > WIDTH - WALLSIZE || fireballArray[checkNumber].yPos + 4 > HEIGHT - WALLSIZE || fireballArray[checkNumber].xPos - 4 < 0 + WALLSIZE || fireballArray[checkNumber].yPos - 4 < 0 + WALLSIZE) && fireballArray[checkNumber].exploded == "false"){
+			fireballArray[checkNumber].exploded = "true"
+			fireballArray[checkNumber].timer = 25
+			fireballArray[checkNumber].size = fireballExplosionSize
 		}
 		checkNumber++
 	}
-	while(numProjectiles > maxProjectiles){
-		fireballArray.splice(0,1)
-		numProjectiles--
+	checkNumber = 0
+	while(checkNumber < fireballArray.length){
+		if(fireballArray[checkNumber].exploded == "true" && fireballArray[checkNumber].timer == 0){
+			fireballArray.splice(checkNumber,1)
+		}
+		checkNumber++
 	}
 }
 //debug info
@@ -1176,4 +1230,14 @@ function drawDebugInfo(){
 	ctx.fillText(Player.health+" hp",1100, 700)
 	ctx.fillText((biteyArray.length + skeletonArray.length)+" monsters left",1100,80)
 	ctx.fillText(magicBlastDamage+" "+magicBlastSpeed+" "+magicBlastCooldownTime,1050,750)
+}
+function collisionCheck(x1,y1,r1,x2,y2,r2){
+	xDist = x1 - x2
+	yDist = y1 - y2
+	trueDist = Math.sqrt(xDist*xDist + yDist*yDist)
+	if(trueDist < r1 + r2){
+		return(true)
+	}else {
+		return(false)
+	}
 }
