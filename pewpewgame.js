@@ -2,11 +2,11 @@
 * title: pewpew game (placeholder)
 * date: 14/04/23
 * author: me
-* version: 6.3
+* version: 7.2
 vvv IMPORTANT: 
 all music and sprites are made by me unless specified :]
-NOTES TO ME IN THE FUTURE
-idk do the thing and dont fail :()
+THINGS:
+weird glitch that gives everything like trails but i like it and im not gonna fix it because it looks cool
 **/
 //constants
 const WIDTH = 1200
@@ -32,8 +32,11 @@ var mouseY = 0
 var magicBlastTimer = 0
 var magicBlastSize = 5
 var magicBlastSpeed = 5
-var magicBlastDamage = 500
-var magicBlastCooldownTime = 1
+var magicBlastDamage = 5
+var magicBlastCooldownTime = 10
+var fireballTimer = 0
+var fireballCooldownTime = 20
+var fireballSpeed = 7
 var numProjectiles = 0
 var maxProjectiles = 500
 var debugInfoOn = 0
@@ -56,16 +59,17 @@ var coinCount = 0
 var possibleRewards = ["health","spell","player","miniboss","boss"]
 //spells
 var magicBlastArray = []
+var fireballArray = []
 //enemiesd
-var monster1Array = []
-var monster2Array = []
-var monster2Size = 18
-var monster2Speed = 1
-var monster2ContactDamage = 3
-var monster2ProjDamage = 8
-var monster2ProjArray = []
-var monster2ProjSpeed = 5
-var monster2ProjSize = 4
+var biteyArray = []
+var skeletonArray = []
+var skeletonSize = 18
+var skeletonSpeed = 1
+var skeletonContactDamage = 3
+var skeletonProjDamage = 8
+var skeletonProjArray = []
+var skeletonProjSpeed = 5
+var skeletonProjSize = 4
 //images
 var heartUpgradeImage = new Image
 heartUpgradeImage.src = "heartUpgrade.png"
@@ -91,6 +95,10 @@ var bossPreviewImage = new Image
 bossPreviewImage.src = "bossPreview.png"
 var magicBlastImage = new Image
 magicBlastImage.src = "spell1.png"
+var biteyImage = new Image
+biteyImage.src = "bitey.png"
+var skeletonImage = new Image
+skeletonImage.src = "skeleton.png"
 //canvas setup
 window.onload=startCanvas
 function startCanvas(){
@@ -99,6 +107,7 @@ function startCanvas(){
 	gameStart()
 }
 function gameStart(){
+	//resets the game 
 	Player.xPos = 500
 	Player.yPos = 500
 	Player.health = 75
@@ -112,8 +121,12 @@ function gameStart(){
 	Room.rightDoor = "closed"
 	Reward.state = 0
 	Reward.type = "health"
+	roomNum = 1
 	doorEntered = "down"
 	dead = "false"
+	biteyArray = []
+	skeletonArray = []
+	skeletonProjArray = []
 	generateNewRoom()
 }
 //update canvas
@@ -135,6 +148,9 @@ function updateCanvas(){
 	}
 	if(magicBlastTimer > 0){
 		magicBlastTimer--
+	}
+	if(fireballTimer > 0){
+		fireballTimer--
 	}
 	if(iFrames > 0){
 		iFrames--
@@ -160,7 +176,7 @@ function updateCanvas(){
 	ctx.fillStyle = "gold"
 	ctx.fillText(coinCount+" Coins",1020,90)
 	numProjectiles = magicBlastArray.length
-	numMonsters = monster1Array.length + monster2Array.length
+	numMonsters = biteyArray.length + skeletonArray.length
 	if(dead == "false"){
 		updateHealthBar()
 		count = 0
@@ -169,19 +185,24 @@ function updateCanvas(){
 			count++
 		}
 		count = 0
-		while(count < monster1Array.length){
-			monster1Array[count].moveMonster1()
+		while(count < fireballArray.length){
+			fireballArray[count].moveFireball()
 			count++
 		}
 		count = 0
-		while(count < monster2Array.length){
-			monster2Array[count].moveMonster2()
-			monster2Array[count].throwmonster2Proj()
+		while(count < biteyArray.length){
+			biteyArray[count].moveBitey()
 			count++
 		}
 		count = 0
-		while(count < monster2ProjArray.length){
-			monster2ProjArray[count].movemonster2Proj()
+		while(count < skeletonArray.length){
+			skeletonArray[count].moveSkeleton()
+			skeletonArray[count].throwSkeletonProj()
+			count++
+		}
+		count = 0
+		while(count < skeletonProjArray.length){
+			skeletonProjArray[count].moveSkeletonProj()
 			count++
 		}
 		checkSpells()
@@ -189,7 +210,7 @@ function updateCanvas(){
 		drawPlayer()
 		checkMonsters()
 		checkMonsters2()
-		checkMonster2Proj()
+		checkSkeletonProj()
 		drawMonsters()
 	}else{
 		inControl = "false"
@@ -448,26 +469,26 @@ function drawNextRewards(){
 	}
 }
 function generateNewRoom(lastRoomReward, entryDoor, lastRoomVariant){
-	monster1Array = []
+	biteyArray = []
 	if(Reward.type == "miniboss"){
-		monster1Array.push(new Monster1(600, 450, 80, 45, 14, 3))
+		biteyArray.push(new Bitey(600, 450, 80, 45, 14, 3))
 	}else{
 		random = Math.ceil(Math.random()*3)
 		if(random == 1 || roomNum == 1){
-			monster1Array.push(new Monster1(300,400,30,20, 5, 2))
-			monster1Array.push(new Monster1(500,200,30,20, 5, 2))
-			monster1Array.push(new Monster1(400,600,30,20, 5, 2))
+			biteyArray.push(new Bitey(300,400,30,20, 5, 2))
+			biteyArray.push(new Bitey(500,200,30,20, 5, 2))
+			biteyArray.push(new Bitey(400,600,30,20, 5, 2))
 		}else if(random == 2){
-			monster2Array.push(new Monster2(400,500,15,100))
-			monster2Array.push(new Monster2(500,400,15,100))
-			monster2Array.push(new Monster2(600,300,15,100))
-			monster2Array.push(new Monster2(700,200,15,100))
-			monster2Array.push(new Monster2(600,500,15,100))
+			skeletonArray.push(new Skeleton(400,500,15,100))
+			skeletonArray.push(new Skeleton(500,400,15,100))
+			skeletonArray.push(new Skeleton(600,300,15,100))
+			skeletonArray.push(new Skeleton(700,200,15,100))
+			skeletonArray.push(new Skeleton(600,500,15,100))
 		}else{
-			monster1Array.push(new Monster1(400,400,30,20, 5, 2))
-			monster1Array.push(new Monster1(500,200,30,20, 5, 2))
-			monster2Array.push(new Monster2(700,300,15,100))
-			monster2Array.push(new Monster2(500,300,15,100))
+			biteyArray.push(new Bitey(400,400,30,20, 5, 2))
+			biteyArray.push(new Bitey(500,200,30,20, 5, 2))
+			skeletonArray.push(new Skeleton(700,300,15,100))
+			skeletonArray.push(new Skeleton(500,300,15,100))
 		}
 	}
 	Reward.state = 0
@@ -542,7 +563,7 @@ function updateHealthBar(){
 		ctx.beginPath()
 		ctx.arc((50 + Player.maxHealth * 2) - (count -1) * 50, 800, 20, 0, 2*Math.PI)
 		ctx.fill()
-	}
+	} 
 }
 //movement
 window.addEventListener('keydown', keyDownFunction)
@@ -566,6 +587,9 @@ function keyDownFunction(keyboardEvent){
 		}
 		if (keyDown=="h" && magicBlastTimer == "0"){
 			magicBlast()
+		}
+		if (keyDown=="j" && fireballTimer == "0"){
+			fireball()
 		}
 		if (keyDown=="p"){
 			if(debugInfoOn=="1"){
@@ -781,16 +805,16 @@ function youClicked(mouseEvent){
 	}
 }
 //monsters 
-class Monster1{
-	constructor(monster1X,monster1Y,monster1Health,monster1Size,monster1Damage,monster1Speed){
-		this.xPos = monster1X
-		this.yPos = monster1Y
-		this.health = monster1Health
-		this.size = monster1Size
-		this.damage = monster1Damage
-		this.speed = monster1Speed
+class Bitey{
+	constructor(biteyX,biteyY,biteyHealth,biteySize,biteyDamage,biteySpeed){
+		this.xPos = biteyX
+		this.yPos = biteyY
+		this.health = biteyHealth
+		this.size = biteySize
+		this.damage = biteyDamage
+		this.speed = biteySpeed
 	}
-	moveMonster1(){
+	moveBitey(){
 		if(this.xPos >= Player.xPos - this.size && this.xPos <= Player.xPos + this.size){
 			if(this.yPos > Player.yPos){
 				this.yPos -= this.speed
@@ -821,61 +845,61 @@ class Monster1{
 		}
 	}
 }
-class Monster2{
+class Skeleton{
 	//will run away from the player while throwing x amount of projectiles at them then start chasing them normally when they run out of projectiles
-	constructor(monster2X,monster2Y,monster2Health,monster2Cooldown){
-		this.xPos = monster2X
-		this.yPos = monster2Y
-		this.health = monster2Health
-		this.cooldown = monster2Cooldown
+	constructor(skeletonX,skeletonY,skeletonHealth,skeletonCooldown){
+		this.xPos = skeletonX
+		this.yPos = skeletonY
+		this.health = skeletonHealth
+		this.cooldown = skeletonCooldown
 	}
-	moveMonster2(){	
-		if(this.xPos >= Player.xPos - monster2Size && this.xPos <= Player.xPos + monster2Size){
+	moveSkeleton(){	
+		if(this.xPos >= Player.xPos - skeletonSize && this.xPos <= Player.xPos + skeletonSize){
 			if(this.yPos > Player.yPos){
-				this.yPos -= monster2Speed
+				this.yPos -= skeletonSpeed
 			}else if(this.yPos < Player.yPos){
-				this.yPos += monster2Speed
+				this.yPos += skeletonSpeed
 			}
-		}else if(this.yPos >= Player.yPos - monster2Size && this.yPos <= Player.yPos + monster2Size){
+		}else if(this.yPos >= Player.yPos - skeletonSize && this.yPos <= Player.yPos + skeletonSize){
 			if(this.xPos > Player.xPos){
-				this.xPos -= monster2Speed
+				this.xPos -= skeletonSpeed
 			}else if(this.xPos < Player.xPos){
-				this.xPos += monster2Speed
+				this.xPos += skeletonSpeed
 			}
 		}else {
 			random = Math.ceil(Math.random()*2)
 			if(random == 1){
 				if(this.yPos > Player.yPos){
-					this.yPos -= monster2Speed
+					this.yPos -= skeletonSpeed
 				}else if(this.yPos < Player.yPos){
-					this.yPos += monster2Speed
+					this.yPos += skeletonSpeed
 				}
 			}else {
 				if(this.xPos > Player.xPos){
-					this.xPos -= monster2Speed
+					this.xPos -= skeletonSpeed
 				}else if(this.xPos < Player.xPos){
-					this.xPos += monster2Speed
+					this.xPos += skeletonSpeed
 				}
 			}
 		}
 	}
-	throwmonster2Proj(){
+	throwSkeletonProj(){
 		if(this.cooldown == 0){
 			//will only throw when the projectile will hit the player (if they were to not move once it was thrown)
 			if(this.xPos < Player.xPos + PLAYERSIZE && this.xPos > Player.xPos - PLAYERSIZE && this.yPos > Player.yPos){
-				monster2ProjArray.push(new monster2Proj(this.xPos,this.yPos,"up"))
+				skeletonProjArray.push(new SkeletonProj(this.xPos,this.yPos,"up"))
 				this.cooldown = 100
 			}
 			if(this.yPos < Player.yPos + PLAYERSIZE && this.yPos > Player.yPos - PLAYERSIZE && this.xPos > Player.xPos){
-				monster2ProjArray.push(new monster2Proj(this.xPos,this.yPos,"left"))
+				skeletonProjArray.push(new SkeletonProj(this.xPos,this.yPos,"left"))
 				this.cooldown = 100
 			}
 			if(this.xPos < Player.xPos + PLAYERSIZE && this.xPos > Player.xPos - PLAYERSIZE && this.yPos < Player.yPos){
-				monster2ProjArray.push(new monster2Proj(this.xPos,this.yPos,"down"))
+				skeletonProjArray.push(new SkeletonProj(this.xPos,this.yPos,"down"))
 				this.cooldown = 100
 			}
 			if(this.yPos < Player.yPos + PLAYERSIZE && this.yPos > Player.yPos - PLAYERSIZE && this.xPos < Player.xPos){
-				monster2ProjArray.push(new monster2Proj(this.xPos,this.yPos,"right"))
+				skeletonProjArray.push(new SkeletonProj(this.xPos,this.yPos,"right"))
 				this.cooldown = 100
 			}
 		}else{
@@ -883,76 +907,77 @@ class Monster2{
 		}
 	}
 }
-class monster2Proj{
-	constructor(monster2ProjX,monster2ProjY,monster2ProjDirection){
-		this.xPos = monster2ProjX
-		this.yPos = monster2ProjY
-		this.direction = monster2ProjDirection
+class SkeletonProj{
+	constructor(skeletonProjX,skeletonProjY,skeletonProjDirection){
+		this.xPos = skeletonProjX
+		this.yPos = skeletonProjY
+		this.direction = skeletonProjDirection
 	}
-	movemonster2Proj(){
+	moveSkeletonProj(){
 		if(this.direction == "up"){
-			this.yPos -= monster2ProjSpeed
+			this.yPos -= skeletonProjSpeed
 		}else if(this.direction == "left"){
-			this.xPos -= monster2ProjSpeed
+			this.xPos -= skeletonProjSpeed
 		}else if(this.direction == "down"){
-			this.yPos += monster2ProjSpeed
+			this.yPos += skeletonProjSpeed
 		}else if(this.direction == "right"){
-			this.xPos += monster2ProjSpeed
+			this.xPos += skeletonProjSpeed
 		}	
 	}
 }
 function drawMonsters(){
 	checkNumber = 0
-	while(checkNumber < monster1Array.length){
+	while(checkNumber < biteyArray.length){
+		if(biteyArray[checkNumber].size > 26){
 		ctx.fillStyle = "#2F4F4F"
 		ctx.beginPath()
-		ctx.arc(monster1Array[checkNumber].xPos,monster1Array[checkNumber].yPos, monster1Array[checkNumber].size, 0, 2*Math.PI)
+		ctx.arc(biteyArray[checkNumber].xPos,biteyArray[checkNumber].yPos, biteyArray[checkNumber].size, 0, 2*Math.PI)
 		ctx.fill()
+		}else {
+			ctx.drawImage(biteyImage,biteyArray[checkNumber].xPos - 25,biteyArray[checkNumber].yPos - 25)
+		}
 		checkNumber++
 	}
 	checkNumber = 0
-	while(checkNumber < monster2Array.length){
-		ctx.fillStyle = "#DCDCDC"
-		ctx.beginPath()
-		ctx.arc(monster2Array[checkNumber].xPos,monster2Array[checkNumber].yPos, monster2Size, 0, 2*Math.PI)
-		ctx.fill()
+	while(checkNumber < skeletonArray.length){
+		ctx.drawImage(skeletonImage,skeletonArray[checkNumber].xPos - 20,skeletonArray[checkNumber].yPos - 20)
 		checkNumber++
 	}
 	checkNumber = 0
-	while(checkNumber < monster2ProjArray.length){
+	while(checkNumber < skeletonProjArray.length){
 		ctx.fillStyle = "#808080"
 		ctx.beginPath()
-		ctx.arc(monster2ProjArray[checkNumber].xPos,monster2ProjArray[checkNumber].yPos, monster2ProjSize, 0, 2*Math.PI)
+		ctx.arc(skeletonProjArray[checkNumber].xPos,skeletonProjArray[checkNumber].yPos, skeletonProjSize, 0, 2*Math.PI)
 		ctx.fill()
 		checkNumber++
 	}
 }
 function checkMonsters(){
 	checkNumber = 0
-	while(checkNumber < monster1Array.length){
-		if(monster1Array[checkNumber].size > PLAYERSIZE){
-		xDist = monster1Array[checkNumber].xPos -  Player.xPos
-		yDist = monster1Array[checkNumber].yPos -  Player.yPos
+	while(checkNumber < biteyArray.length){
+		if(biteyArray[checkNumber].size > PLAYERSIZE){
+		xDist = biteyArray[checkNumber].xPos -  Player.xPos
+		yDist = biteyArray[checkNumber].yPos -  Player.yPos
 		}else{
-		xDist = Player.xPos -  monster1Array[checkNumber].xPos
-		yDist = Player.yPos -  monster1Array[checkNumber].yPos
+		xDist = Player.xPos -  biteyArray[checkNumber].xPos
+		yDist = Player.yPos -  biteyArray[checkNumber].yPos
 		}
 		trueDist = Math.sqrt(xDist*xDist + yDist*yDist)
-		if(trueDist < monster1Array[checkNumber].size + PLAYERSIZE && iFrames == 0){
-			Player.health -= monster1Array[checkNumber].damage
+		if(trueDist < biteyArray[checkNumber].size + PLAYERSIZE && iFrames == 0){
+			Player.health -= biteyArray[checkNumber].damage
 			iFrames = 30
 		}
 		checkNumber++
 	}
 	checkNumber = 0
-	while(checkNumber < monster1Array.length){
+	while(checkNumber < biteyArray.length){
 		checkNumber2 = 0
 		while(checkNumber2 < magicBlastArray.length){
-			xDist = monster1Array[checkNumber].xPos -  magicBlastArray[checkNumber2].xPos
-			yDist = monster1Array[checkNumber].yPos -  magicBlastArray[checkNumber2].yPos
+			xDist = biteyArray[checkNumber].xPos -  magicBlastArray[checkNumber2].xPos
+			yDist = biteyArray[checkNumber].yPos -  magicBlastArray[checkNumber2].yPos
 			trueDist = Math.sqrt(xDist*xDist + yDist*yDist)
-			if(trueDist < monster1Array[checkNumber].size + magicBlastSize){
-				monster1Array[checkNumber].health -= magicBlastDamage
+			if(trueDist < biteyArray[checkNumber].size + magicBlastSize){
+				biteyArray[checkNumber].health -= magicBlastDamage
 				magicBlastArray.splice(checkNumber2, 1)
 			}
 			checkNumber2++
@@ -960,9 +985,9 @@ function checkMonsters(){
 		checkNumber++
 	}
 	checkNumber = 0
-	while(checkNumber < monster1Array.length){
-		if(monster1Array[checkNumber].health < 1){
-			monster1Array.splice(checkNumber,1)
+	while(checkNumber < biteyArray.length){
+		if(biteyArray[checkNumber].health < 1){
+			biteyArray.splice(checkNumber,1)
 			if(Math.ceil(Math.random() * 3) == 2){
 				coinCount += Math.floor(Math.random() * 5) + 5
 			}
@@ -972,25 +997,25 @@ function checkMonsters(){
 }
 function checkMonsters2(){
 	checkNumber = 0
-	while(checkNumber < monster2Array.length){
-		xDist = Player.xPos -  monster2Array[checkNumber].xPos
-		yDist = Player.yPos -  monster2Array[checkNumber].yPos
+	while(checkNumber < skeletonArray.length){
+		xDist = Player.xPos -  skeletonArray[checkNumber].xPos
+		yDist = Player.yPos -  skeletonArray[checkNumber].yPos
 		trueDist = Math.sqrt(xDist*xDist + yDist*yDist)
-		if(trueDist < monster2Size + PLAYERSIZE && iFrames == 0){
-			Player.health -= monster2ContactDamage
+		if(trueDist < skeletonSize + PLAYERSIZE && iFrames == 0){
+			Player.health -= skeletonContactDamage
 			iFrames = 30
 		}
 		checkNumber++
 	}
 	checkNumber = 0
-	while(checkNumber < monster2Array.length){
+	while(checkNumber < skeletonArray.length){
 		checkNumber2 = 0
 		while(checkNumber2 < magicBlastArray.length){
-			xDist = monster2Array[checkNumber].xPos -  magicBlastArray[checkNumber2].xPos
-			yDist = monster2Array[checkNumber].yPos -  magicBlastArray[checkNumber2].yPos
+			xDist = skeletonArray[checkNumber].xPos -  magicBlastArray[checkNumber2].xPos
+			yDist = skeletonArray[checkNumber].yPos -  magicBlastArray[checkNumber2].yPos
 			trueDist = Math.sqrt(xDist*xDist + yDist*yDist)
-			if(trueDist < monster2Size + magicBlastSize){
-				monster2Array[checkNumber].health -= magicBlastDamage
+			if(trueDist < skeletonSize + magicBlastSize){
+				skeletonArray[checkNumber].health -= magicBlastDamage
 				magicBlastArray.splice(checkNumber2, 1)
 			}
 			checkNumber2++
@@ -998,9 +1023,9 @@ function checkMonsters2(){
 		checkNumber++
 	}
 	checkNumber = 0
-	while(checkNumber < monster2Array.length){
-		if(monster2Array[checkNumber].health < 1){
-			monster2Array.splice(checkNumber,1)
+	while(checkNumber < skeletonArray.length){
+		if(skeletonArray[checkNumber].health < 1){
+			skeletonArray.splice(checkNumber,1)
 			if(Math.ceil(Math.random() * 3) == 2){
 				coinCount += Math.floor(Math.random() * 5) + 5
 			}
@@ -1008,22 +1033,22 @@ function checkMonsters2(){
 		checkNumber++
 	}
 }
-function checkMonster2Proj(){
+function checkSkeletonProj(){
 	checkNumber = 0
-	while(checkNumber < monster2ProjArray.length){
-		if(monster2ProjArray[checkNumber].xPos + monster2ProjSize > WIDTH - WALLSIZE || monster2ProjArray[checkNumber].yPos + monster2ProjSize > HEIGHT - WALLSIZE || monster2ProjArray[checkNumber].xPos - monster2ProjSize < 0 + WALLSIZE || monster2ProjArray[checkNumber].yPos - monster2ProjSize < 0 + WALLSIZE){
-			monster2ProjArray.splice(checkNumber,1)
+	while(checkNumber < skeletonProjArray.length){
+		if(skeletonProjArray[checkNumber].xPos + skeletonProjSize > WIDTH - WALLSIZE || skeletonProjArray[checkNumber].yPos + skeletonProjSize > HEIGHT - WALLSIZE || skeletonProjArray[checkNumber].xPos - skeletonProjSize < 0 + WALLSIZE || skeletonProjArray[checkNumber].yPos - skeletonProjSize < 0 + WALLSIZE){
+			skeletonProjArray.splice(checkNumber,1)
 		}
 		checkNumber++
 	}
 	checkNumber = 0
-	while(checkNumber < monster2ProjArray.length){
-		xDist = Player.xPos -  monster2ProjArray[checkNumber].xPos
-		yDist = Player.yPos -  monster2ProjArray[checkNumber].yPos
+	while(checkNumber < skeletonProjArray.length){
+		xDist = Player.xPos -  skeletonProjArray[checkNumber].xPos
+		yDist = Player.yPos -  skeletonProjArray[checkNumber].yPos
 		trueDist = Math.sqrt(xDist*xDist + yDist*yDist)
-		if(trueDist < PLAYERSIZE + monster2ProjSize){
-			Player.health -= monster2ProjDamage
-			monster2ProjArray.splice(checkNumber, 1)
+		if(trueDist < PLAYERSIZE + skeletonProjSize){
+			Player.health -= skeletonProjDamage
+			skeletonProjArray.splice(checkNumber, 1)
 			iFrames = 30
 		}
 		checkNumber++
@@ -1067,7 +1092,7 @@ class MagicBlastProjectile{
 //
 function fireball(){
 	fireballTimer = fireballCooldownTime
-	fireballArray.push(new FireballProjectile(Player.xPos,Player.yPos, facingDirection))
+	fireballArray.push(new FireballProjectile(Player.xPos,Player.yPos, facingDirection, false, 4))
 }
 class FireballProjectile{
 	constructor(fireballX, fireballY, fireballDirection, fireballExploded, fireballSize){
@@ -1108,6 +1133,14 @@ function drawSpells(){
 		ctx.drawImage(magicBlastImage, magicBlastArray[checkNumber].xPos - magicBlastSize, magicBlastArray[checkNumber].yPos - magicBlastSize)
 		checkNumber++
 	}
+	checkNumber = 0
+	while(checkNumber < fireballArray.length){
+		ctx.fillStyle = "#FF8C00"
+		ctx.beginPath()
+		ctx.arc(fireballArray[checkNumber].xPos, fireballArray[checkNumber].yPos, fireballArray[checkNumber].size, 0,2*Math.PI)
+		ctx.fill()
+		checkNumber++
+	}
 
 }
 function checkSpells(){
@@ -1122,6 +1155,17 @@ function checkSpells(){
 		magicBlastArray.splice(0,1)
 		numProjectiles--
 	}
+	checkNumber = 0
+	while(checkNumber < magicBlastArray.length){
+		if(fireballArray[checkNumber].xPos + 4 > WIDTH - WALLSIZE || fireballArray[checkNumber].yPos + 4 > HEIGHT - WALLSIZE || fireballArray[checkNumber].xPos - 4 < 0 + WALLSIZE || fireballArray[checkNumber].yPos - 4 < 0 + WALLSIZE){
+			fireballArray.splice(checkNumber,1)
+		}
+		checkNumber++
+	}
+	while(numProjectiles > maxProjectiles){
+		fireballArray.splice(0,1)
+		numProjectiles--
+	}
 }
 //debug info
 function drawDebugInfo(){
@@ -1130,6 +1174,6 @@ function drawDebugInfo(){
 	ctx.fillText(numProjectiles+" projectiles", 1100, 40)
 	ctx.fillText(facingDirection, 1100, 60)
 	ctx.fillText(Player.health+" hp",1100, 700)
-	ctx.fillText(monster1Array.length+" monsters left",1100,80)
+	ctx.fillText((biteyArray.length + skeletonArray.length)+" monsters left",1100,80)
 	ctx.fillText(magicBlastDamage+" "+magicBlastSpeed+" "+magicBlastCooldownTime,1050,750)
 }
