@@ -20,7 +20,7 @@ var upPressed = false
 var leftPressed = false
 var downPressed = false
 var rightPressed = false
-var playerSpeed = 4
+var playerSpeed = 4                
 var facingDirection
 var count = 0
 var dashTimer = 0 
@@ -35,16 +35,17 @@ var magicBlastSpeed = 5
 var magicBlastDamage = 5
 var magicBlastCooldownTime = 10
 var fireballTimer = 0
-var fireballCooldownTime = 20
+var fireballCooldownTime = 1
 var fireballSpeed = 7
 var fireballExplosionSize = 50
-var fireballDamage = 10
+var fireballDamage = 8
+var fireballUnlocked = "false"
 var numProjectiles = 0
 var maxProjectiles = 500
 var debugInfoOn = 0
 var roomNum = 1
-var checkNumber = 0
-var checkNumber2 = 0
+var count = 0
+var count2 = 0
 var xDist = 0
 var yDist = 0
 var trueDist = 0
@@ -59,6 +60,8 @@ var random
 var coinCount = 0
 //arrays
 var possibleRewards = ["health","spell","player","miniboss","boss"]
+var shopItemArray = []
+var shopItemTypes = ["heal","spell","newSpell","player"]
 //spells
 var magicBlastArray = []
 var fireballArray = []
@@ -227,6 +230,10 @@ function updateCanvas(){
 }
 //
 function roomStateCheck(){
+	if(Reward.type == "shop"){
+		nextRoomsReward()
+		Reward.state = "2"
+	}
 	if(numMonsters == "0"){
 		if(Reward.state == "0"){
 			Reward.state = "1"	
@@ -301,6 +308,16 @@ function makeRewardVariety(type){
 	if(type == "boss"){
 		Reward.variety = "newSpell"
 	}
+	if(type == "shop"){
+		Reward.variety = "shop"
+	}
+	if(type == "coins"){
+		if(Math.random()*10 > 8.5){
+			Reward.variety = "coinBag"
+		}else{
+			Reward.variety = "coinPile"
+		}
+	}
 }
 function grantReward(variety){
 	if(variety == "health"){
@@ -335,6 +352,12 @@ function grantReward(variety){
 		magicBlastSpeed = magicBlastSpeed + 1
 		magicBlastCooldownTime--
 	}
+	if(variety == "coinBag"){
+		coinCount += Math.floor(Math.random()*40) + 60
+	}
+	if(variety == "coinPile"){
+		coinCount += Math.floor(Math.random()*15) + 15
+	}
 }
 //room stuff
 class Room{
@@ -348,7 +371,7 @@ class Room{
 	}
 }
 function nextRoomsReward(){
-	possibleRewards = ["health","spell","player","miniboss"]
+	possibleRewards = ["health","spell","player","miniboss","shop","coins"]
 	random = Math.floor(Math.random()*possibleRewards.length)
 	Room.upDoor = possibleRewards[random]
 	possibleRewards.splice(random, 1)
@@ -474,7 +497,9 @@ function generateNewRoom(lastRoomReward, entryDoor, lastRoomVariant){
 	biteyArray = []
 	if(Reward.type == "miniboss"){
 		biteyArray.push(new Bitey(600, 450, 80, 45, 14, 3))
-	}else{
+	}else if(Reward.type == "shop"){
+		setupShop()
+	}else {
 		random = Math.ceil(Math.random()*3)
 		if(random == 1 || roomNum == 1){
 			biteyArray.push(new Bitey(300,400,30,20, 5, 2))
@@ -494,6 +519,24 @@ function generateNewRoom(lastRoomReward, entryDoor, lastRoomVariant){
 		}
 	}
 	Reward.state = 0
+}
+//shop code
+function setupShop(){
+	if(fireballUnlocked == "true"){
+		shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+5, "heal"))
+		shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+20, "spell"))
+		shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+15, "player"))
+	}else{
+		shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+5, "heal"))
+		shopItemArray.push(new ShopItem(75, "newSpell"))
+		shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+15, "player"))
+	}
+}
+class ShopItem {
+	constructor(itemCost,itemType){
+		this.cost = itemCost
+		this.type = itemType
+	}
 }
 //door entering stuff
 function doorCheck(){
@@ -590,7 +633,7 @@ function keyDownFunction(keyboardEvent){
 		if (keyDown=="h" && magicBlastTimer == "0"){
 			magicBlast()
 		}
-		if (keyDown=="j" && fireballTimer == "0"){
+		if (keyDown=="j" && fireballTimer == "0" && fireballUnlocked == "true"){
 			fireball()
 		}
 		if (keyDown=="p"){
@@ -848,7 +891,6 @@ class Bitey{
 	}
 }
 class Skeleton{
-	//will run away from the player while throwing x amount of projectiles at them then start chasing them normally when they run out of projectiles
 	constructor(skeletonX,skeletonY,skeletonHealth,skeletonCooldown){
 		this.xPos = skeletonX
 		this.yPos = skeletonY
@@ -928,159 +970,159 @@ class SkeletonProj{
 	}
 }
 function drawMonsters(){
-	checkNumber = 0
-	while(checkNumber < biteyArray.length){
-		if(biteyArray[checkNumber].size > 26){
+	count = 0
+	while(count < biteyArray.length){
+		if(biteyArray[count].size > 26){
 		ctx.fillStyle = "#2F4F4F"
 		ctx.beginPath()
-		ctx.arc(biteyArray[checkNumber].xPos,biteyArray[checkNumber].yPos, biteyArray[checkNumber].size, 0, 2*Math.PI)
+		ctx.arc(biteyArray[count].xPos,biteyArray[count].yPos, biteyArray[count].size, 0, 2*Math.PI)
 		ctx.fill()
 		}else {
-			ctx.drawImage(biteyImage,biteyArray[checkNumber].xPos - 25,biteyArray[checkNumber].yPos - 25)
+			ctx.drawImage(biteyImage,biteyArray[count].xPos - 25,biteyArray[count].yPos - 25)
 		}
-		checkNumber++
+		count++
 	}
-	checkNumber = 0
-	while(checkNumber < skeletonArray.length){
-		ctx.drawImage(skeletonImage,skeletonArray[checkNumber].xPos - 20,skeletonArray[checkNumber].yPos - 20)
-		checkNumber++
+	count = 0
+	while(count < skeletonArray.length){
+		ctx.drawImage(skeletonImage,skeletonArray[count].xPos - 20,skeletonArray[count].yPos - 20)
+		count++
 	}
-	checkNumber = 0
-	while(checkNumber < skeletonProjArray.length){
+	count = 0
+	while(count < skeletonProjArray.length){
 		ctx.fillStyle = "#808080"
 		ctx.beginPath()
-		ctx.arc(skeletonProjArray[checkNumber].xPos,skeletonProjArray[checkNumber].yPos, skeletonProjSize, 0, 2*Math.PI)
+		ctx.arc(skeletonProjArray[count].xPos,skeletonProjArray[count].yPos, skeletonProjSize, 0, 2*Math.PI)
 		ctx.fill()
-		checkNumber++
+		count++
 	}
 }
 function checkMonsters(){
-	checkNumber = 0
-	while(checkNumber < biteyArray.length){
-		if(biteyArray[checkNumber].size > PLAYERSIZE){
-		xDist = biteyArray[checkNumber].xPos -  Player.xPos
-		yDist = biteyArray[checkNumber].yPos -  Player.yPos
-		}else{
-		xDist = Player.xPos -  biteyArray[checkNumber].xPos
-		yDist = Player.yPos -  biteyArray[checkNumber].yPos
-		}
+	count = 0
+	while(count < biteyArray.length){
+		xDist = biteyArray[count].xPos -  Player.xPos
+		yDist = biteyArray[count].yPos -  Player.yPos
 		trueDist = Math.sqrt(xDist*xDist + yDist*yDist)
-		if(trueDist < biteyArray[checkNumber].size + PLAYERSIZE && iFrames == 0){
-			Player.health -= biteyArray[checkNumber].damage
+		if(collisionCheck(biteyArray[count].xPos,biteyArray[count].yPos,biteyArray[count].size,Player.xPos,Player.yPos,PLAYERSIZE) && iFrames == 0){
+			Player.health -= biteyArray[count].damage
 			iFrames = 30
 		}
-		checkNumber++
+		count++
 	}
-	checkNumber = 0
-	while(checkNumber < biteyArray.length){
-		checkNumber2 = 0
-		while(checkNumber2 < magicBlastArray.length){
-			xDist = biteyArray[checkNumber].xPos -  magicBlastArray[checkNumber2].xPos
-			yDist = biteyArray[checkNumber].yPos -  magicBlastArray[checkNumber2].yPos
+	count = 0
+	while(count < biteyArray.length){
+		count2 = 0
+		while(count2 < magicBlastArray.length){
+			xDist = biteyArray[count].xPos -  magicBlastArray[count2].xPos
+			yDist = biteyArray[count].yPos -  magicBlastArray[count2].yPos
 			trueDist = Math.sqrt(xDist*xDist + yDist*yDist)
-			if(trueDist < biteyArray[checkNumber].size + magicBlastSize){
-				biteyArray[checkNumber].health -= magicBlastDamage
-				magicBlastArray.splice(checkNumber2, 1)
+			if(collisionCheck(biteyArray[count].xPos,biteyArray[count].yPos,biteyArray[count].size,magicBlastArray[count2].xPos,magicBlastArray[count2].yPos,magicBlastSize)){
+				biteyArray[count].health -= magicBlastDamage
+				magicBlastArray.splice(count2, 1)
 			}
-			checkNumber2++
+			count2++
 		}
-		checkNumber++
+		count++
 	}
-	checkNumber = 0
-	while(checkNumber < biteyArray.length){
-		checkNumber2 = 0
-		while(checkNumber2 < fireballArray.length){
-			if(collisionCheck(biteyArray[checkNumber].xPos,biteyArray[checkNumber].yPos,biteyArray[checkNumber].size,fireballArray[checkNumber2].xPos,fireballArray[checkNumber2].yPos,fireballArray[checkNumber2].size)){
-				if(fireballArray[checkNumber2].exploded == "true" && fireballArray[checkNumber2].iFrames == 0){
-					fireballArray[checkNumber2].iFrames = 15
-					biteyArray[checkNumber].health -= fireballDamage
+	count = 0
+	while(count < biteyArray.length){
+		count2 = 0
+		while(count2 < fireballArray.length){
+			if(collisionCheck(biteyArray[count].xPos,biteyArray[count].yPos,biteyArray[count].size,fireballArray[count2].xPos,fireballArray[count2].yPos,fireballArray[count2].size)){
+				if(fireballArray[count2].exploded == "true" && fireballArray[count2].iFrames == 0){
+					fireballArray[count2].iFrames = 15
+					biteyArray[count].health -= fireballDamage
 				}else {
-					fireballArray[checkNumber2].exploded = "true"
-					fireballArray[checkNumber2].timer = 25
-					fireballArray[checkNumber2].size = fireballExplosionSize
+					fireballArray[count2].exploded = "true"
+					if(fireballArray[count2].timer == 0){
+						fireballArray[count2].timer = 25
+					}
+
+					fireballArray[count2].size = fireballExplosionSize
 				}
 			}
-			checkNumber2++
+			count2++
 		}
-		checkNumber++
+		count++
 	}
-	checkNumber = 0
-	while(checkNumber < biteyArray.length){
-		if(biteyArray[checkNumber].health < 1){
-			biteyArray.splice(checkNumber,1)
+	count = 0
+	while(count < biteyArray.length){
+		if(biteyArray[count].health < 1){
+			biteyArray.splice(count,1)
 			if(Math.ceil(Math.random() * 3) == 2){
 				coinCount += Math.floor(Math.random() * 5) + 5
 			}
 		}
-		checkNumber++
+		count++
 	}
 }
 function checkMonsters2(){
-	checkNumber = 0
-	while(checkNumber < skeletonArray.length){
-		if(collisionCheck(Player.xPos,Player.yPos,PLAYERSIZE,skeletonArray[checkNumber].xPos,skeletonArray[checkNumber].yPos,skeletonSize) && iFrames == 0){
+	count = 0
+	while(count < skeletonArray.length){
+		if(collisionCheck(Player.xPos,Player.yPos,PLAYERSIZE,skeletonArray[count].xPos,skeletonArray[count].yPos,skeletonSize) && iFrames == 0){
 			Player.health -= skeletonContactDamage
 			iFrames = 30
 		}
-		checkNumber++
+		count++
 	}
-	checkNumber = 0
-	while(checkNumber < skeletonArray.length){
-		checkNumber2 = 0
-		while(checkNumber2 < magicBlastArray.length){
-			if(collisionCheck(skeletonArray[checkNumber].xPos,skeletonArray[checkNumber].yPos,skeletonSize,magicBlastArray[checkNumber2].xPos,magicBlastArray[checkNumber2].yPos,magicBlastSize)){
-				skeletonArray[checkNumber].health -= magicBlastDamage
-				magicBlastArray.splice(checkNumber2, 1)
+	count = 0
+	while(count < skeletonArray.length){
+		count2 = 0
+		while(count2 < magicBlastArray.length){
+			if(collisionCheck(skeletonArray[count].xPos,skeletonArray[count].yPos,skeletonSize,magicBlastArray[count2].xPos,magicBlastArray[count2].yPos,magicBlastSize)){
+				skeletonArray[count].health -= magicBlastDamage
+				magicBlastArray.splice(count2, 1)
 			}
-			checkNumber2++
+			count2++
 		}
-		checkNumber++
+		count++
 	}
-	checkNumber = 0
-	while(checkNumber < skeletonArray.length){
-		checkNumber2 = 0
-		while(checkNumber2 < fireballArray.length){
-			if(collisionCheck(skeletonArray[checkNumber].xPos,skeletonArray[checkNumber].yPos,skeletonSize,fireballArray[checkNumber2].xPos,fireballArray[checkNumber2].yPos,fireballArray[checkNumber2].size)){
-				if(fireballArray[checkNumber2].exploded == "true" && fireballArray[checkNumber2].iFrames == 0){
-					fireballArray[checkNumber2].iFrames = 15
-					skeletonArray[checkNumber].health -= fireballDamage
+	count = 0
+	while(count < skeletonArray.length){
+		count2 = 0
+		while(count2 < fireballArray.length){
+			if(collisionCheck(skeletonArray[count].xPos,skeletonArray[count].yPos,skeletonSize,fireballArray[count2].xPos,fireballArray[count2].yPos,fireballArray[count2].size)){
+				if(fireballArray[count2].exploded == "true" && fireballArray[count2].iFrames == 0){
+					fireballArray[count2].iFrames = 15
+					skeletonArray[count].health -= fireballDamage
 				}else {
-					fireballArray[checkNumber2].exploded = "true"
-					fireballArray[checkNumber2].timer = 25
-					fireballArray[checkNumber2].size = fireballExplosionSize
+					fireballArray[count2].exploded = "true"
+					if(fireballArray[count2].timer == 0){
+						fireballArray[count2].timer = 25
+					}
+					fireballArray[count2].size = fireballExplosionSize
 				}
 			}
-			checkNumber2++
+			count2++
 		}
-		checkNumber++
+		count++
 	}
-	checkNumber = 0
-	while(checkNumber < skeletonArray.length){
-		if(skeletonArray[checkNumber].health < 1){
-			skeletonArray.splice(checkNumber,1)
+	count = 0
+	while(count < skeletonArray.length){
+		if(skeletonArray[count].health < 1){
+			skeletonArray.splice(count,1)
 			if(Math.ceil(Math.random() * 3) == 2){
 				coinCount += Math.floor(Math.random() * 5) + 5
 			}
 		}
-		checkNumber++
+		count++
 	}
 }
 function checkSkeletonProj(){
-	checkNumber = 0
-	while(checkNumber < skeletonProjArray.length){
-		if(skeletonProjArray[checkNumber].xPos + skeletonProjSize > WIDTH - WALLSIZE || skeletonProjArray[checkNumber].yPos + skeletonProjSize > HEIGHT - WALLSIZE || skeletonProjArray[checkNumber].xPos - skeletonProjSize < 0 + WALLSIZE || skeletonProjArray[checkNumber].yPos - skeletonProjSize < 0 + WALLSIZE){
-			skeletonProjArray.splice(checkNumber,1)
+	count = 0
+	while(count < skeletonProjArray.length){
+		if(skeletonProjArray[count].xPos + skeletonProjSize > WIDTH - WALLSIZE || skeletonProjArray[count].yPos + skeletonProjSize > HEIGHT - WALLSIZE || skeletonProjArray[count].xPos - skeletonProjSize < 0 + WALLSIZE || skeletonProjArray[count].yPos - skeletonProjSize < 0 + WALLSIZE){
+			skeletonProjArray.splice(count,1)
 		}
-		checkNumber++
+		count++
 	}
-	checkNumber = 0
-	while(checkNumber < skeletonProjArray.length){
-		if(collisionCheck(Player.xPos,Player.yPos,PLAYERSIZE,skeletonProjArray[checkNumber].xPos,skeletonProjArray[checkNumber].yPos,skeletonProjSize)){
+	count = 0
+	while(count < skeletonProjArray.length){
+		if(collisionCheck(Player.xPos,Player.yPos,PLAYERSIZE,skeletonProjArray[count].xPos,skeletonProjArray[count].yPos,skeletonProjSize)){
 			Player.health -= skeletonProjDamage
-			skeletonProjArray.splice(checkNumber, 1)
+			skeletonProjArray.splice(count, 1)
 			iFrames = 30
 		}
-		checkNumber++
+		count++
 	}
 }
 //spells
@@ -1177,48 +1219,48 @@ class FireballProjectile{
 }
 //
 function drawSpells(){
-	checkNumber = 0
-	while(checkNumber < magicBlastArray.length){
-		ctx.drawImage(magicBlastImage, magicBlastArray[checkNumber].xPos - magicBlastSize, magicBlastArray[checkNumber].yPos - magicBlastSize)
-		checkNumber++
+	count = 0
+	while(count < magicBlastArray.length){
+		ctx.drawImage(magicBlastImage, magicBlastArray[count].xPos - magicBlastSize, magicBlastArray[count].yPos - magicBlastSize)
+		count++
 	}
-	checkNumber = 0
-	while(checkNumber < fireballArray.length){
+	count = 0
+	while(count < fireballArray.length){
 		ctx.fillStyle = "#FF8C00"
 		ctx.beginPath()
-		ctx.arc(fireballArray[checkNumber].xPos, fireballArray[checkNumber].yPos, fireballArray[checkNumber].size, 0,2*Math.PI)
+		ctx.arc(fireballArray[count].xPos, fireballArray[count].yPos, fireballArray[count].size, 0,2*Math.PI)
 		ctx.fill()
-		checkNumber++
+		count++
 	}
 
 }
 function checkSpells(){
-	checkNumber = 0
-	while(checkNumber < magicBlastArray.length){
-		if(magicBlastArray[checkNumber].xPos + magicBlastSize > WIDTH - WALLSIZE || magicBlastArray[checkNumber].yPos + magicBlastSize > HEIGHT - WALLSIZE || magicBlastArray[checkNumber].xPos - magicBlastSize < 0 + WALLSIZE || magicBlastArray[checkNumber].yPos - magicBlastSize < 0 + WALLSIZE){
-			magicBlastArray.splice(checkNumber,1)
+	count = 0
+	while(count < magicBlastArray.length){
+		if(magicBlastArray[count].xPos + magicBlastSize > WIDTH - WALLSIZE || magicBlastArray[count].yPos + magicBlastSize > HEIGHT - WALLSIZE || magicBlastArray[count].xPos - magicBlastSize < 0 + WALLSIZE || magicBlastArray[count].yPos - magicBlastSize < 0 + WALLSIZE){
+			magicBlastArray.splice(count,1)
 		}
-		checkNumber++
+		count++
 	}
 	while(numProjectiles > maxProjectiles){
 		magicBlastArray.splice(0,1)
 		numProjectiles--
 	}
-	checkNumber = 0
-	while(checkNumber < fireballArray.length){
-		if((fireballArray[checkNumber].xPos + 4 > WIDTH - WALLSIZE || fireballArray[checkNumber].yPos + 4 > HEIGHT - WALLSIZE || fireballArray[checkNumber].xPos - 4 < 0 + WALLSIZE || fireballArray[checkNumber].yPos - 4 < 0 + WALLSIZE) && fireballArray[checkNumber].exploded == "false"){
-			fireballArray[checkNumber].exploded = "true"
-			fireballArray[checkNumber].timer = 25
-			fireballArray[checkNumber].size = fireballExplosionSize
+	count = 0
+	while(count < fireballArray.length){
+		if((fireballArray[count].xPos + 4 > WIDTH - WALLSIZE || fireballArray[count].yPos + 4 > HEIGHT - WALLSIZE || fireballArray[count].xPos - 4 < 0 + WALLSIZE || fireballArray[count].yPos - 4 < 0 + WALLSIZE) && fireballArray[count].exploded == "false"){
+			fireballArray[count].exploded = "true"
+			fireballArray[count].timer = 25
+			fireballArray[count].size = fireballExplosionSize
 		}
-		checkNumber++
+		count++
 	}
-	checkNumber = 0
-	while(checkNumber < fireballArray.length){
-		if(fireballArray[checkNumber].exploded == "true" && fireballArray[checkNumber].timer == 0){
-			fireballArray.splice(checkNumber,1)
+	count = 0
+	while(count < fireballArray.length){
+		if(fireballArray[count].exploded == "true" && fireballArray[count].timer == 0){
+			fireballArray.splice(count,1)
 		}
-		checkNumber++
+		count++
 	}
 }
 //debug info
