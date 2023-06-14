@@ -14,6 +14,7 @@ const HEIGHT = 900
 const PLAYERSIZE = 25
 const WALLSIZE = 56
 const MAXSPEED = 8
+const SHOPITEMSIZE = 30
 //variables (so many :I)
 var ctx
 var upPressed = false
@@ -230,7 +231,7 @@ function updateCanvas(){
 }
 //
 function roomStateCheck(){
-	if(Reward.type == "shop"){
+	if(Reward.type == "shop" && Reward.state != "2"){
 		nextRoomsReward()
 		Reward.state = "2"
 	}
@@ -252,6 +253,10 @@ function roomStateCheck(){
 		}
 		if(Reward.state == "2"){
 			drawNextRewards()
+			if(Reward.type == "shop"){
+				checkShopItems()
+				drawShopItems()
+			}
 			if(doorCheck() == "true"){
 				roomNum++
 				loadingScreen = 25
@@ -523,19 +528,26 @@ function generateNewRoom(lastRoomReward, entryDoor, lastRoomVariant){
 //shop code
 function setupShop(){
 	if(fireballUnlocked == "true"){
-		shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+5, "heal"))
-		shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+20, "spell"))
-		shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+15, "player"))
+		shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+5, "heal","false" ))
+		shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+20, "spell","false"))
+		shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+15, "player","false"))
 	}else{
-		shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+5, "heal"))
-		shopItemArray.push(new ShopItem(75, "newSpell"))
-		shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+15, "player"))
+		shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+5, "heal","false"))
+		shopItemArray.push(new ShopItem(75, "newSpell","false"))
+		shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+15, "player","false"))
 	}
 }
+function drawShopItems(){
+
+}
+function checkShopItems(){
+
+}
 class ShopItem {
-	constructor(itemCost,itemType){
+	constructor(itemCost,itemType,itemBought){
 		this.cost = itemCost
 		this.type = itemType
+		this.bought = itemBought
 	}
 }
 //door entering stuff
