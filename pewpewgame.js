@@ -127,6 +127,15 @@ function gameStart(){
 	Room.rightDoor = "closed"
 	Reward.state = 0
 	Reward.type = "health"
+	magicBlastSize = 5
+	magicBlastSpeed = 5
+	magicBlastDamage = 5
+	magicBlastCooldownTime = 10
+	fireballCooldownTime = 30
+	fireballSpeed = 7
+	fireballExplosionSize = 50
+	fireballDamage = 8
+	fireballUnlocked = "false"
 	roomNum = 1
 	doorEntered = "down"
 	dead = "false"
@@ -210,6 +219,12 @@ function updateCanvas(){
 		while(count < skeletonProjArray.length){
 			skeletonProjArray[count].moveSkeletonProj()
 			count++
+		}
+		if(fireballCooldownTime < 15){
+			fireballCooldownTime = 15
+		}
+		if(magicBlastCooldownTime < 5){
+			magicBlastCooldownTime = 5
 		}
 		checkSpells()
 		drawSpells()
@@ -538,10 +553,82 @@ function setupShop(){
 	}
 }
 function drawShopItems(){
-
+	if(shopItemArray[0].bought == "false"){
+		ctx.fillStyle = "#DC143C"
+		ctx.beginPath()
+		ctx.arc(400,300,SHOPITEMSIZE,0,2*Math.PI)
+		ctx.fill()
+		ctx.font = "20px Papyrus"
+		if(coinCount >= shopItemArray[0].cost){
+			ctx.fillStyle = "gold"
+		}else {
+			ctx.fillStyle = "black"
+		}
+		ctx.fillText(shopItemArray[0].cost+" coins", 300, 350)
+	}
+	if(shopItemArray[1].bought == "false"){
+		if(shopItemArray[1].type == "newSpell"){
+			ctx.fillStyle = "#FAFAD2"
+		}else {
+			ctx.fillStyle = "#FFF0F5"
+		}
+		ctx.beginPath()
+		ctx.arc(600,300,SHOPITEMSIZE,0,2*Math.PI)
+		ctx.fill()
+		if(coinCount >= shopItemArray[1].cost){
+			ctx.fillStyle = "gold"
+		}else {
+			ctx.fillStyle = "black"
+		}
+		ctx.font = "20px Papyrus"
+		ctx.fillText(shopItemArray[1].cost+" coins", 500, 350)
+	}
+	if(shopItemArray[2].bought == "false"){
+		ctx.fillStyle = "#87CEFA"
+		ctx.beginPath()
+		ctx.arc(800,300,SHOPITEMSIZE,0,2*Math.PI)
+		ctx.fill()
+		if(coinCount >= shopItemArray[2].cost){
+			ctx.fillStyle = "gold"
+		}else {
+			ctx.fillStyle = "black"
+		}
+		ctx.font = "20px Papyrus"
+		ctx.fillText(shopItemArray[2].cost+" coins", 700, 350)
+	}
 }
 function checkShopItems(){
-
+	if(collisionCheck(400,300,SHOPITEMSIZE,Player.xPos,Player.yPos,PLAYERSIZE) && coinCount >= shopItemArray[0].cost && shopItemArray[0].bought == "false"){
+		Player.health += Math.floor(Math.random()*16) + 35
+		if(Player.health > Player.maxHealth){
+			Player.health = Player.maxHealth
+		}
+		shopItemArray[0].bought = "true"
+	}
+	if(collisionCheck(600,300,SHOPITEMSIZE,Player.xPos,Player.yPos,PLAYERSIZE) && coinCount >= shopItemArray[1].cost && shopItemArray[1].bought == "false"){
+		if(shopItemArray[1].type == "newSpell"){
+			fireballUnlocked = "true"
+		}else {
+			if(Math.random()*2 > 1){
+				fireballDamage += 2
+				fireballSpeed += 1
+				fireballCooldownTime -= 2
+			}else {
+				magicBlastDamage += 2
+				magicBlastCooldownTime -= 1
+			}
+		}
+		shopItemArray[1].bought = "true"
+	}
+	if(collisionCheck(800,300,SHOPITEMSIZE,Player.xPos,Player.yPos,PLAYERSIZE) && coinCount >= shopItemArray[2].cost && shopItemArray[2].bought == "false"){
+		random = Math.floor(Math.random()*2)
+		if(random == 1){
+			playerSpeed += 1
+		}else {
+			dashCooldown += 3
+		}
+		shopItemArray[2].bought = "true"
+	}
 }
 class ShopItem {
 	constructor(itemCost,itemType,itemBought){
@@ -885,20 +972,16 @@ class Bitey{
 				this.xPos += this.speed
 			}
 		}else {
-			random = Math.ceil(Math.random()*2)
-			if(random == 1){
-				if(this.yPos > Player.yPos){
-					this.yPos -= this.speed
-				}else if(this.yPos < Player.yPos){
-					this.yPos += this.speed
-				}
-			}else {
-				if(this.xPos > Player.xPos){
-					this.xPos -= this.speed
-				}else if(this.xPos < Player.xPos){
-					this.xPos += this.speed
-				}
+			if(this.yPos > Player.yPos){
+				this.yPos -= (this.speed - 1)
+			}else if(this.yPos < Player.yPos){
+				this.yPos += (this.speed - 1)
 			}
+			if(this.xPos > Player.xPos){
+				this.xPos -= (this.speed - 1)
+			}else if(this.xPos < Player.xPos){
+				this.xPos += (this.speed - 1)
+			}	
 		}
 	}
 }
@@ -923,19 +1006,15 @@ class Skeleton{
 				this.xPos += skeletonSpeed
 			}
 		}else {
-			random = Math.ceil(Math.random()*2)
-			if(random == 1){
-				if(this.yPos > Player.yPos){
-					this.yPos -= skeletonSpeed
-				}else if(this.yPos < Player.yPos){
-					this.yPos += skeletonSpeed
-				}
-			}else {
-				if(this.xPos > Player.xPos){
-					this.xPos -= skeletonSpeed
-				}else if(this.xPos < Player.xPos){
-					this.xPos += skeletonSpeed
-				}
+			if(this.yPos > Player.yPos){
+				this.yPos -= skeletonSpeed
+			}else if(this.yPos < Player.yPos){
+				this.yPos += skeletonSpeed
+			}
+			if(this.xPos > Player.xPos){
+				this.xPos -= skeletonSpeed
+			}else if(this.xPos < Player.xPos){
+				this.xPos += skeletonSpeed
 			}
 		}
 	}
