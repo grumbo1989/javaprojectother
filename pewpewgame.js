@@ -59,6 +59,9 @@ var rewardPreviewSize = 30
 var dead = "false"
 var random
 var coinCount = 0
+var addChance
+var enemyCap = 5
+var minEnemies = 3
 //arrays
 var possibleRewards = ["health","spell","player","miniboss","boss"]
 var shopItemArray = []
@@ -460,6 +463,24 @@ function drawNextRewards(){
 		if(Room.upDoor == "boss"){
 			ctx.drawImage(bossPreviewImage, 570, 70)
 		}
+		if(Room.upDoor == "shop"){
+			ctx.fillStyle = "gold"
+			ctx.beginPath()
+			ctx.arc(600,100,30,0,2*Math.PI)
+			ctx.fill()
+		}
+		if(Room.upDoor == "coins"){
+			ctx.fillStyle = "#A0522D"
+			ctx.beginPath()
+			ctx.arc(600,100,30,0,2*Math.PI)
+			ctx.fill()
+			ctx.beginPath()
+			ctx.moveTo(600,70)
+			ctx.lineTo(615,60)
+			ctx.lineTo(585,60)
+			ctx.closePath()
+			ctx.fill()
+		}
 	}
 	if(Room.leftDoor != "closed"){
 		if(Room.leftDoor == "health"){
@@ -476,6 +497,24 @@ function drawNextRewards(){
 		}
 		if(Room.leftDoor == "boss"){
 			ctx.drawImage(bossPreviewImage, 70, 420)
+		}
+		if(Room.leftDoor == "shop"){
+			ctx.fillStyle = "gold"
+			ctx.beginPath()
+			ctx.arc(100,450,30,0,2*Math.PI)
+			ctx.fill()
+		}
+		if(Room.leftDoor == "coins"){
+			ctx.fillStyle = "#A0522D"
+			ctx.beginPath()
+			ctx.arc(100,450,30,0,2*Math.PI)
+			ctx.fill()
+			ctx.beginPath()
+			ctx.moveTo(100,420)
+			ctx.lineTo(115,410)
+			ctx.lineTo(85,410)
+			ctx.closePath()
+			ctx.fill()
 		}
 	}
 	if(Room.downDoor != "closed"){
@@ -494,6 +533,24 @@ function drawNextRewards(){
 		if(Room.downDoor == "boss"){
 			ctx.drawImage(bossPreviewImage, 570, 770)
 		}
+		if(Room.downDoor == "shop"){
+			ctx.fillStyle = "gold"
+			ctx.beginPath()
+			ctx.arc(600,800,30,0,2*Math.PI)
+			ctx.fill()
+		}
+		if(Room.downDoor == "coins"){
+			ctx.fillStyle = "#A0522D"
+			ctx.beginPath()
+			ctx.arc(600,800,30,0,2*Math.PI)
+			ctx.fill()
+			ctx.beginPath()
+			ctx.moveTo(600,770)
+			ctx.lineTo(615,760)
+			ctx.lineTo(585,760)
+			ctx.closePath()
+			ctx.fill()
+		}
 	}
 	if(Room.rightDoor != "closed"){
 		if(Room.rightDoor == "health"){
@@ -511,47 +568,63 @@ function drawNextRewards(){
 		if(Room.rightDoor == "boss"){
 			ctx.drawImage(bossPreviewImage, 1070, 420)
 		}
+		if(Room.rightDoor == "shop"){
+			ctx.fillStyle = "gold"
+			ctx.beginPath()
+			ctx.arc(1100,450,30,0,2*Math.PI)
+			ctx.fill()
+		}
+		if(Room.rightDoor == "coins"){
+			ctx.fillStyle = "#A0522D"
+			ctx.beginPath()
+			ctx.arc(1100,450,30,0,2*Math.PI)
+			ctx.fill()
+			ctx.beginPath()
+			ctx.moveTo(1100,420)
+			ctx.lineTo(1115,410)
+			ctx.lineTo(1085,410)
+			ctx.closePath()
+			ctx.fill()
+		}
 	}
 }
 function generateNewRoom(lastRoomReward, entryDoor, lastRoomVariant){
-	biteyArray = []
 	if(Reward.type == "miniboss"){
-		biteyArray.push(new Bitey(600, 450, 80, 45, 14, 3))
+		biteyArray.push(new Bitey(600, 450, 80 + roomNum * 3, 45, 14, 3))
 	}else if(Reward.type == "shop"){
-		setupShop()
-	}else {
-		random = Math.ceil(Math.random()*3)
-		if(random == 1 || roomNum == 1){
-			biteyArray.push(new Bitey(300,400,30,20, 5, 2))
-			biteyArray.push(new Bitey(500,200,30,20, 5, 2))
-			biteyArray.push(new Bitey(400,600,30,20, 5, 2))
-		}else if(random == 2){
-			skeletonArray.push(new Skeleton(400,500,15,100))
-			skeletonArray.push(new Skeleton(500,400,15,100))
-			skeletonArray.push(new Skeleton(600,300,15,100))
-			skeletonArray.push(new Skeleton(700,200,15,100))
-			skeletonArray.push(new Skeleton(600,500,15,100))
+		console.log("swwaaasdj")
+		if(fireballUnlocked == "true"){
+			shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+5, "heal","false" ))
+			shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+20, "spell","false"))
+			shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+15, "player","false"))
 		}else{
-			biteyArray.push(new Bitey(400,400,30,20, 5, 2))
-			biteyArray.push(new Bitey(500,200,30,20, 5, 2))
-			skeletonArray.push(new Skeleton(700,300,15,100))
-			skeletonArray.push(new Skeleton(500,300,15,100))
+			shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+5, "heal","false"))
+			shopItemArray.push(new ShopItem(75, "newSpell","false"))
+			shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+15, "player","false"))
 		}
+	}else {
+		/*
+		count = 0
+		addChance = 100
+		if(roomNum < 15){
+			minEnemies = 3
+			enemyCap = 5
+		}else {
+			minEnemies = 5
+			enemyCap = 15
+		}
+		while(count < enemyCap){
+			if(count < minEnemies){
+				if(Math.random()*2<1){
+					biteyArray.push(new Bitey(Math.floor(Math.random() * 800)+200,Math.floor(Math.random() * 500)+200))
+				}
+			}
+		}
+		*/
 	}
 	Reward.state = 0
 }
 //shop code
-function setupShop(){
-	if(fireballUnlocked == "true"){
-		shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+5, "heal","false" ))
-		shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+20, "spell","false"))
-		shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+15, "player","false"))
-	}else{
-		shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+5, "heal","false"))
-		shopItemArray.push(new ShopItem(75, "newSpell","false"))
-		shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+15, "player","false"))
-	}
-}
 function drawShopItems(){
 	if(shopItemArray[0].bought == "false"){
 		ctx.fillStyle = "#DC143C"
@@ -564,7 +637,7 @@ function drawShopItems(){
 		}else {
 			ctx.fillStyle = "black"
 		}
-		ctx.fillText(shopItemArray[0].cost+" coins", 300, 350)
+		ctx.fillText(shopItemArray[0].cost+" coins", 250, 350)
 	}
 	if(shopItemArray[1].bought == "false"){
 		if(shopItemArray[1].type == "newSpell"){
@@ -581,7 +654,7 @@ function drawShopItems(){
 			ctx.fillStyle = "black"
 		}
 		ctx.font = "20px Papyrus"
-		ctx.fillText(shopItemArray[1].cost+" coins", 500, 350)
+		ctx.fillText(shopItemArray[1].cost+" coins", 450, 350)
 	}
 	if(shopItemArray[2].bought == "false"){
 		ctx.fillStyle = "#87CEFA"
@@ -594,7 +667,7 @@ function drawShopItems(){
 			ctx.fillStyle = "black"
 		}
 		ctx.font = "20px Papyrus"
-		ctx.fillText(shopItemArray[2].cost+" coins", 700, 350)
+		ctx.fillText(shopItemArray[2].cost+" coins", 650, 350)
 	}
 }
 function checkShopItems(){
@@ -603,6 +676,7 @@ function checkShopItems(){
 		if(Player.health > Player.maxHealth){
 			Player.health = Player.maxHealth
 		}
+		coinCount -= shopItemArray[0].cost
 		shopItemArray[0].bought = "true"
 	}
 	if(collisionCheck(600,300,SHOPITEMSIZE,Player.xPos,Player.yPos,PLAYERSIZE) && coinCount >= shopItemArray[1].cost && shopItemArray[1].bought == "false"){
@@ -618,6 +692,7 @@ function checkShopItems(){
 				magicBlastCooldownTime -= 1
 			}
 		}
+		coinCount -= shopItemArray[1].cost
 		shopItemArray[1].bought = "true"
 	}
 	if(collisionCheck(800,300,SHOPITEMSIZE,Player.xPos,Player.yPos,PLAYERSIZE) && coinCount >= shopItemArray[2].cost && shopItemArray[2].bought == "false"){
@@ -627,6 +702,7 @@ function checkShopItems(){
 		}else {
 			dashCooldown += 3
 		}
+		coinCount -= shopItemArray[2].cost
 		shopItemArray[2].bought = "true"
 	}
 }
