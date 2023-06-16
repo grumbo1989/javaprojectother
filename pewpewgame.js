@@ -603,7 +603,7 @@ function generateNewRoom(lastRoomReward, entryDoor, lastRoomVariant){
 			shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+15, "player","false"))
 		}
 	}else {
-		/*
+		
 		count = 0
 		addChance = 100
 		if(roomNum < 15){
@@ -616,11 +616,13 @@ function generateNewRoom(lastRoomReward, entryDoor, lastRoomVariant){
 		while(count < enemyCap){
 			if(count < minEnemies){
 				if(Math.random()*2<1){
-					biteyArray.push(new Bitey(Math.floor(Math.random() * 800)+200,Math.floor(Math.random() * 500)+200))
+					biteyArray.push(new Bitey(Math.floor(Math.random() * 800)+200,Math.floor(Math.random() * 500)+200,20+(roomNum-1),20,5+Math.floor(roomNum/5),2))
+				}else {
+					skeletonArray.push(new Skeleton(Math.floor(Math.random() * 800)+200,Math.floor(Math.random() * 500)+200,10+(roomNum-1),50))
 				}
+				count++
 			}
 		}
-		*/
 	}
 	Reward.state = 0
 }
