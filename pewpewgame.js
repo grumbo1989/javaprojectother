@@ -7,6 +7,13 @@ vvv IMPORTANT:
 all music and sprites are made by me unless specified :]
 THINGS:
 weird glitch that gives everything like trails but i like it and im not gonna fix it because it looks cool
+make image for restart button
+player sprite is good idea too
+sprite for explosion projectile
+sprite for skeleton projectile
+sprite for heal aura thingy
+sprite for rewards and shop items like heal potion
+boss sprite make it like evil spider or tentacle thing
 **/
 //constants
 const WIDTH = 1200
@@ -88,6 +95,10 @@ var skeletonProjDamage = 8
 var skeletonProjArray = []
 var skeletonProjSpeed = 5
 var skeletonProjSize = 4
+var bossSize = 60
+var bossSpeed = 4
+var bossArray = []
+var bossProjArray = []
 //images
 var heartUpgradeImage = new Image
 heartUpgradeImage.src = "heartUpgrade.png"
@@ -119,6 +130,10 @@ var biteyImage = new Image
 biteyImage.src = "bitey.png"
 var skeletonImage = new Image
 skeletonImage.src = "skeleton.png"
+var minibossImage = new Image 
+minibossImage.src = "miniboss.png"
+var killCountImage = new Image
+killCountImage.src = "killCount.png"
 //canvas setup
 window.onload=startCanvas
 function startCanvas(){
@@ -164,13 +179,14 @@ function gameStart(){
 }
 //update canvas
 function updateCanvas(){
-
+	
 	ctx.drawImage(backgroundImage,0,0)
 	drawDoors()
 	if(Player.health < 1){
 		youLostLmao()
 	}
 	checkDirection()
+	//progressing timers
 	if(loadingScreen > 0){
 		inControl = "false"
 	}else {
@@ -188,18 +204,7 @@ function updateCanvas(){
 	if(iFrames > 0){
 		iFrames--
 	}
-	if(upPressed == "true" && upWallCollision(1)){
-		Player.yPos -= playerSpeed
-	}
-	if(leftPressed == "true" && leftWallCollision(1)){
-		Player.xPos -= playerSpeed
-	}
-	if(downPressed == "true" && downWallCollision(1)){
-		Player.yPos += playerSpeed
-	}
-	if(rightPressed == "true" && rightWallCollision(1)){
-		Player.xPos += playerSpeed
-	}
+	
 	if(debugInfoOn=="1"){
 		drawDebugInfo()
 	}
@@ -208,9 +213,27 @@ function updateCanvas(){
 	ctx.fillText("Room "+roomNum,60,90)
 	ctx.fillStyle = "gold"
 	ctx.fillText(coinCount+" Coins",1020,90)
+	ctx.drawImage(killCountImage,1000,800)
+	ctx.fillStyle = "#555555"
+	ctx.font = "60px Papyrus"
+	ctx.fillText(enemyKills,1045,835)
 	numProjectiles = magicBlastArray.length
 	numMonsters = biteyArray.length + skeletonArray.length
 	if(dead == "false"){
+		//code that only needs to happen if you aren't dead 
+		//move code and wall collision check
+		if(upPressed == "true" && upWallCollision(1)){
+			Player.yPos -= playerSpeed
+		}
+		if(leftPressed == "true" && leftWallCollision(1)){
+			Player.xPos -= playerSpeed
+		}
+		if(downPressed == "true" && downWallCollision(1)){
+			Player.yPos += playerSpeed
+		}
+		if(rightPressed == "true" && rightWallCollision(1)){
+			Player.xPos += playerSpeed
+		}
 		updateHealthBar()
 		count = 0
 		while(count < magicBlastArray.length){
@@ -444,7 +467,8 @@ function nextRoomsReward(){
 	random = Math.floor(Math.random()*possibleRewards.length)
 	Room.rightDoor = possibleRewards[random]
 	possibleRewards.splice(random, 1)
-	if((roomNum + 1) / (Math.floor((roomNum + 1) / 10)) == 0){
+	if((roomNum + 1) % 10 == 0){
+		console.log("skkasufausf")
 		Room.upDoor = "boss"
 		Room.leftDoor = "boss"
 		Room.downDoor = "boss"
@@ -604,7 +628,9 @@ function generateNewRoom(){
 			shopItemArray.push(new ShopItem(75, "newSpell","false"))
 			shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+15, "player","false"))
 		}
-	}else {
+	}else if(Reward.type == "boss"){
+
+	}else{
 		
 		count = 0
 		spawnedCount = 0
@@ -1085,14 +1111,14 @@ class Bitey{
 			}
 		}else {
 			if(this.yPos > Player.yPos){
-				this.yPos -= (this.speed - 1)
+				this.yPos -= this.speed
 			}else if(this.yPos < Player.yPos){
-				this.yPos += (this.speed - 1)
+				this.yPos += this.speed
 			}
 			if(this.xPos > Player.xPos){
-				this.xPos -= (this.speed - 1)
+				this.xPos -= this.speed
 			}else if(this.xPos < Player.xPos){
-				this.xPos += (this.speed - 1)
+				this.xPos += this.speed
 			}	
 		}
 	}
@@ -1175,13 +1201,10 @@ class SkeletonProj{
 function drawMonsters(){
 	count = 0
 	while(count < biteyArray.length){
-		if(biteyArray[count].size > 26){
-		ctx.fillStyle = "#2F4F4F"
-		ctx.beginPath()
-		ctx.arc(biteyArray[count].xPos,biteyArray[count].yPos, biteyArray[count].size, 0, 2*Math.PI)
-		ctx.fill()
+		if(biteyArray[count].size > 20){
+		ctx.drawImage(minibossImage,biteyArray[count].xPos - 45,biteyArray[count].yPos - 45)
 		}else {
-			ctx.drawImage(biteyImage,biteyArray[count].xPos - 25,biteyArray[count].yPos - 25)
+			ctx.drawImage(biteyImage,biteyArray[count].xPos - 20,biteyArray[count].yPos - 20)
 		}
 		count++
 	}
@@ -1328,6 +1351,62 @@ function checkSkeletonProj(){
 			iFrames = 30
 		}
 		count++
+	}
+}
+class BossMonster{
+	constructor(bossX,bossY,bossProjCooldown,bossAttackPhase){
+		this.xPos = bossX
+		this.yPos = bossY
+		this.cooldown = bossProjCooldown
+		//boss has chase phase where he follows you and shoot you with 3 projectiles at once
+		//then there is bullet pain phase where he goes to a spot in the room and telegraphs an attack and shoots like tons of projectiles in 8 directions
+		this.phase = bossAttackPhase
+	}
+	moveBoss(){
+		if(this.phase == "chase"){
+			if(this.xPos >= Player.xPos - bossSize && this.xPos <= Player.xPos + bossSize){
+				if(this.yPos > Player.yPos){
+					this.yPos -= bossSpeed
+				}else if(this.yPos < Player.yPos){
+					this.yPos += bossSpeed
+				}
+			}else if(this.yPos >= Player.yPos - bossSize && this.yPos <= Player.yPos + bossSize){
+				if(this.xPos > Player.xPos){
+					this.xPos -= bossSpeed
+				}else if(this.xPos < Player.xPos){
+					this.xPos += bossSpeed
+				}
+			}else {
+				if(this.yPos > Player.yPos){
+					this.yPos -= bossSpeed
+				}else if(this.yPos < Player.yPos){
+					this.yPos += bossSpeed
+				}
+				if(this.xPos > Player.xPos){
+					this.xPos -= bossSpeed
+				}else if(this.xPos < Player.xPos){
+					this.xPos += bossSpeed
+				}
+			}
+		}else {
+
+		}
+	}
+	shootBossProj(){
+		if(this.phase == "chase"){
+
+		}else {
+			//do the stuff with the lines telegraph attack
+			bossProjArray.push(new BossProj(this.xPos,this,yPos,"up",6))
+		}
+	}
+}
+class BossProj{
+	constructor(bossProjX,bossProjY,bossProjDirection,bossProjSpeed){
+		this.xPos = bossProjX
+		this.yPos = bossProjY
+		this.direction = bossProjDirection
+		this.speed = bossProjSpeed
 	}
 }
 //spells
