@@ -47,6 +47,7 @@ var debugInfoOn = 0
 var roomNum = 1
 var count = 0
 var count2 = 0
+var spawnedCount = 0
 var xDist = 0
 var yDist = 0
 var trueDist = 0
@@ -62,6 +63,14 @@ var coinCount = 0
 var addChance
 var enemyCap = 5
 var minEnemies = 3
+var enemyKills = 0
+var killsCurrent
+var healthCurrent
+var healTimer = 0
+var healAmount = 15
+var healUnlocked = "false"
+var attemptingHeal = "false"
+
 //arrays
 var possibleRewards = ["health","spell","player","miniboss","boss"]
 var shopItemArray = []
@@ -102,6 +111,8 @@ var minibossPreviewImage = new Image
 minibossPreviewImage.src = "minibossPreview.png"
 var bossPreviewImage = new Image
 bossPreviewImage.src = "bossPreview.png"
+var shopPreviewImage = new Image
+shopPreviewImage.src = "shopPreview.png"
 var magicBlastImage = new Image
 magicBlastImage.src = "spell1.png"
 var biteyImage = new Image
@@ -117,8 +128,8 @@ function startCanvas(){
 }
 function gameStart(){
 	//resets the game 
-	Player.xPos = 500
-	Player.yPos = 500
+	Player.xPos = 600
+	Player.yPos = 100
 	Player.health = 75
 	Player.maxHealth = 75
 	Room.rewardX = 576
@@ -134,11 +145,15 @@ function gameStart(){
 	magicBlastSpeed = 5
 	magicBlastDamage = 5
 	magicBlastCooldownTime = 10
-	fireballCooldownTime = 30
+	fireballCooldownTime = 40
 	fireballSpeed = 7
 	fireballExplosionSize = 50
 	fireballDamage = 8
 	fireballUnlocked = "false"
+	healTimer = 0
+	healUnlocked = "false"
+	healAmount = 15
+	enemyKills = 0
 	roomNum = 1
 	doorEntered = "down"
 	dead = "false"
@@ -207,6 +222,7 @@ function updateCanvas(){
 			fireballArray[count].moveFireball()
 			count++
 		}
+		healCheck()
 		count = 0
 		while(count < biteyArray.length){
 			biteyArray[count].moveBitey()
@@ -229,6 +245,7 @@ function updateCanvas(){
 		if(magicBlastCooldownTime < 5){
 			magicBlastCooldownTime = 5
 		}
+
 		checkSpells()
 		drawSpells()
 		drawPlayer()
@@ -322,10 +339,13 @@ function makeRewardVariety(type){
 		Reward.variety = "spell"
 	}
 	if(type == "miniboss"){
-		if(Math.ceil(Math.random()*2) == 1){
+		random = Math.random() * 3
+		if(random > 2){
 			Reward.variety = "largeHealth"
-		}else {
+		}else if(random > 1){
 			Reward.variety = "largeSpell"
+		}else{
+			Reward.variety = "coinBag"
 		}
 	}
 	if(type == "boss"){
@@ -348,21 +368,33 @@ function grantReward(variety){
 		Player.health += 25
 	}
 	if(variety == "damage"){
-		magicBlastDamage = magicBlastDamage * 1.1
-		magicBlastDamage = (Math.ceil(magicBlastDamage*5))/5
+		magicBlastDamage += 2
+		if(fireballUnlocked == "true"){
+			fireballDamage += 3
+		}
 	}
 	if(variety == "speed"){
 		playerSpeed++
 	}
 	if(variety == "spell"){
-		random = Math.ceil(Math.random * 3)
-		if(random == 1){
-			magicBlastDamage = magicBlastDamage * 1.2
-			magicBlastDamage = (Math.ceil(magicBlastDamage*5))/5
-		}else if(random == 2){
-			magicBlastSpeed = magicBlastSpeed + 1
-		}else if(random == 3){
-			magicBlastCooldownTime--
+		if(Math.random()*2 > 1 && fireballUnlocked == "true"){
+			random = Math.random() * 3
+			if(random > 2){
+				fireballDamage += 3
+			}else if(random > 1){
+				fireballCooldownTime -= 2
+			}else{
+				fireballSpeed += 1
+			}
+		}else {
+			random = Math.random() * 3
+			if(random > 2){
+				magicBlastDamage += 2
+			}else if(random > 1){
+				magicBlastCooldownTime -= 1
+			}else{
+				magicBlastSpeed += 1
+			}
 		}
 	}
 	if(variety == "largeHealth"){
@@ -370,10 +402,15 @@ function grantReward(variety){
 		Player.health += 50
 	}
 	if(variety == "largeSpell"){
-		magicBlastDamage = magicBlastDamage * 1.2
-		magicBlastDamage = (Math.ceil(magicBlastDamage*5))/5
-		magicBlastSpeed = magicBlastSpeed + 1
-		magicBlastCooldownTime--
+		if(Math.random()*2 > 1 && fireballUnlocked == "true"){
+			fireballDamage += 2
+			fireballSpeed += 1
+			fireballCooldownTime -= 2
+		}else {
+			magicBlastDamage += 2
+			magicBlastCooldownTime -= 1
+			magicBlastSpeed += 1
+		}
 	}
 	if(variety == "coinBag"){
 		coinCount += Math.floor(Math.random()*40) + 60
@@ -464,21 +501,12 @@ function drawNextRewards(){
 			ctx.drawImage(bossPreviewImage, 570, 70)
 		}
 		if(Room.upDoor == "shop"){
+			ctx.drawImage(shopPreviewImage, 570, 70)
+		}
+		if(Room.upDoor == "coins"){
 			ctx.fillStyle = "gold"
 			ctx.beginPath()
 			ctx.arc(600,100,30,0,2*Math.PI)
-			ctx.fill()
-		}
-		if(Room.upDoor == "coins"){
-			ctx.fillStyle = "#A0522D"
-			ctx.beginPath()
-			ctx.arc(600,100,30,0,2*Math.PI)
-			ctx.fill()
-			ctx.beginPath()
-			ctx.moveTo(600,70)
-			ctx.lineTo(615,60)
-			ctx.lineTo(585,60)
-			ctx.closePath()
 			ctx.fill()
 		}
 	}
@@ -499,21 +527,12 @@ function drawNextRewards(){
 			ctx.drawImage(bossPreviewImage, 70, 420)
 		}
 		if(Room.leftDoor == "shop"){
+			ctx.drawImage(shopPreviewImage, 70, 420)
+		}
+		if(Room.leftDoor == "coins"){
 			ctx.fillStyle = "gold"
 			ctx.beginPath()
 			ctx.arc(100,450,30,0,2*Math.PI)
-			ctx.fill()
-		}
-		if(Room.leftDoor == "coins"){
-			ctx.fillStyle = "#A0522D"
-			ctx.beginPath()
-			ctx.arc(100,450,30,0,2*Math.PI)
-			ctx.fill()
-			ctx.beginPath()
-			ctx.moveTo(100,420)
-			ctx.lineTo(115,410)
-			ctx.lineTo(85,410)
-			ctx.closePath()
 			ctx.fill()
 		}
 	}
@@ -534,21 +553,12 @@ function drawNextRewards(){
 			ctx.drawImage(bossPreviewImage, 570, 770)
 		}
 		if(Room.downDoor == "shop"){
+			ctx.drawImage(shopPreviewImage, 570, 770)
+		}
+		if(Room.downDoor == "coins"){
 			ctx.fillStyle = "gold"
 			ctx.beginPath()
 			ctx.arc(600,800,30,0,2*Math.PI)
-			ctx.fill()
-		}
-		if(Room.downDoor == "coins"){
-			ctx.fillStyle = "#A0522D"
-			ctx.beginPath()
-			ctx.arc(600,800,30,0,2*Math.PI)
-			ctx.fill()
-			ctx.beginPath()
-			ctx.moveTo(600,770)
-			ctx.lineTo(615,760)
-			ctx.lineTo(585,760)
-			ctx.closePath()
 			ctx.fill()
 		}
 	}
@@ -569,31 +579,23 @@ function drawNextRewards(){
 			ctx.drawImage(bossPreviewImage, 1070, 420)
 		}
 		if(Room.rightDoor == "shop"){
+			ctx.drawImage(shopPreviewImage, 1070, 420)
+		}
+		if(Room.rightDoor == "coins"){
 			ctx.fillStyle = "gold"
 			ctx.beginPath()
 			ctx.arc(1100,450,30,0,2*Math.PI)
 			ctx.fill()
 		}
-		if(Room.rightDoor == "coins"){
-			ctx.fillStyle = "#A0522D"
-			ctx.beginPath()
-			ctx.arc(1100,450,30,0,2*Math.PI)
-			ctx.fill()
-			ctx.beginPath()
-			ctx.moveTo(1100,420)
-			ctx.lineTo(1115,410)
-			ctx.lineTo(1085,410)
-			ctx.closePath()
-			ctx.fill()
-		}
 	}
 }
-function generateNewRoom(lastRoomReward, entryDoor, lastRoomVariant){
+function generateNewRoom(){
+	shopItemArray = []
 	if(Reward.type == "miniboss"){
 		biteyArray.push(new Bitey(600, 450, 80 + roomNum * 3, 45, 14, 3))
 	}else if(Reward.type == "shop"){
 		console.log("swwaaasdj")
-		if(fireballUnlocked == "true"){
+		if((fireballUnlocked == "true" && healUnlocked == "true") || Math.random() * 5 > 3){
 			shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+5, "heal","false" ))
 			shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+20, "spell","false"))
 			shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+15, "player","false"))
@@ -605,24 +607,37 @@ function generateNewRoom(lastRoomReward, entryDoor, lastRoomVariant){
 	}else {
 		
 		count = 0
+		spawnedCount = 0
 		addChance = 100
 		if(roomNum < 15){
 			minEnemies = 3
-			enemyCap = 5
+			enemyCap = 7
 		}else {
 			minEnemies = 5
 			enemyCap = 15
 		}
 		while(count < enemyCap){
-			if(count < minEnemies){
+			if(spawnedCount < minEnemies){
 				if(Math.random()*2<1){
-					biteyArray.push(new Bitey(Math.floor(Math.random() * 800)+200,Math.floor(Math.random() * 500)+200,20+(roomNum-1),20,5+Math.floor(roomNum/5),2))
+					biteyArray.push(new Bitey(Math.floor(Math.random() * 800)+200,Math.floor(Math.random() * 500)+200,20+(Math.floor(roomNum/5)*5),20,5+Math.floor(roomNum/5),2))
 				}else {
-					skeletonArray.push(new Skeleton(Math.floor(Math.random() * 800)+200,Math.floor(Math.random() * 500)+200,10+(roomNum-1),50))
+					skeletonArray.push(new Skeleton(Math.floor(Math.random() * 800)+200,Math.floor(Math.random() * 500)+200,15+(Math.floor(roomNum/5)*3),100))
 				}
-				count++
+				spawnedCount++
+				
+			}else {
+				if((Math.random()*100)+Math.floor(roomNum/5)*2>70){
+					if(Math.random()*2<1){
+						biteyArray.push(new Bitey(Math.floor(Math.random() * 800)+200,Math.floor(Math.random() * 500)+200,20+(Math.floor(roomNum/5)*5),20,5+Math.floor(roomNum/5),2))
+					}else {
+						skeletonArray.push(new Skeleton(Math.floor(Math.random() * 800)+200,Math.floor(Math.random() * 500)+200,15+(Math.floor(roomNum/5)*3),100))
+					}
+					spawnedCount++
+				}
 			}
+			count++
 		}
+		
 	}
 	Reward.state = 0
 }
@@ -639,7 +654,7 @@ function drawShopItems(){
 		}else {
 			ctx.fillStyle = "black"
 		}
-		ctx.fillText(shopItemArray[0].cost+" coins", 250, 350)
+		ctx.fillText(shopItemArray[0].cost+" coins", 360, 350)
 	}
 	if(shopItemArray[1].bought == "false"){
 		if(shopItemArray[1].type == "newSpell"){
@@ -656,7 +671,7 @@ function drawShopItems(){
 			ctx.fillStyle = "black"
 		}
 		ctx.font = "20px Papyrus"
-		ctx.fillText(shopItemArray[1].cost+" coins", 450, 350)
+		ctx.fillText(shopItemArray[1].cost+" coins", 560, 350)
 	}
 	if(shopItemArray[2].bought == "false"){
 		ctx.fillStyle = "#87CEFA"
@@ -669,7 +684,7 @@ function drawShopItems(){
 			ctx.fillStyle = "black"
 		}
 		ctx.font = "20px Papyrus"
-		ctx.fillText(shopItemArray[2].cost+" coins", 650, 350)
+		ctx.fillText(shopItemArray[2].cost+" coins", 760, 350)
 	}
 }
 function checkShopItems(){
@@ -683,7 +698,17 @@ function checkShopItems(){
 	}
 	if(collisionCheck(600,300,SHOPITEMSIZE,Player.xPos,Player.yPos,PLAYERSIZE) && coinCount >= shopItemArray[1].cost && shopItemArray[1].bought == "false"){
 		if(shopItemArray[1].type == "newSpell"){
-			fireballUnlocked = "true"
+			if(fireballUnlocked == "false" && healUnlocked == "false"){
+				if(Math.random()*5 > 2){
+					fireballUnlocked = "true"
+				}else {
+					healUnlocked = "true"
+				}
+			}else if(healUnlocked == "false"){
+				healUnlocked = "true"
+			}else {
+				fireballUnlocked = "false"
+			}
 		}else {
 			if(Math.random()*2 > 1){
 				fireballDamage += 2
@@ -751,13 +776,19 @@ class Player{
 }
 function drawPlayer(){
 	if(dashTimer == "0"){
-	ctx.fillStyle = "#800000"
+		ctx.fillStyle = "#800000"
 	}else{
 		ctx.fillStyle = "#4169E1"
 	}
 	ctx.beginPath()
 	ctx.arc(Player.xPos, Player.yPos, PLAYERSIZE, 0, 2*Math.PI)
 	ctx.fill()
+	if(attemptingHeal == "true"){
+		ctx.strokeStyle = "#00FF00"
+		ctx.beginPath()
+		ctx.arc(Player.xPos, Player.yPos, PLAYERSIZE + 3, 0, 2*Math.PI)
+		ctx.stroke()
+	}
 }
 function youLostLmao(){
 	dead = "true"
@@ -812,6 +843,9 @@ function keyDownFunction(keyboardEvent){
 		}
 		if (keyDown=="j" && fireballTimer == "0" && fireballUnlocked == "true"){
 			fireball()
+		}
+		if (keyDown=="l" && healTimer == "0" && healUnlocked == "true"){
+			healSpell()
 		}
 		if (keyDown=="p"){
 			if(debugInfoOn=="1"){
@@ -1217,6 +1251,7 @@ function checkMonsters(){
 	while(count < biteyArray.length){
 		if(biteyArray[count].health < 1){
 			biteyArray.splice(count,1)
+			enemyKills++
 			if(Math.ceil(Math.random() * 3) == 2){
 				coinCount += Math.floor(Math.random() * 5) + 5
 			}
@@ -1269,6 +1304,7 @@ function checkMonsters2(){
 	while(count < skeletonArray.length){
 		if(skeletonArray[count].health < 1){
 			skeletonArray.splice(count,1)
+			enemyKills++
 			if(Math.ceil(Math.random() * 3) == 2){
 				coinCount += Math.floor(Math.random() * 5) + 5
 			}
@@ -1432,6 +1468,26 @@ function checkSpells(){
 		count++
 	}
 }
+function healSpell(){
+	if(numMonsters != 0){
+		healthCurrent = Player.health
+		killsCurrent = enemyKills
+		healTimer = 750
+		attemptingHeal = "true"
+	}
+}
+function healCheck(){
+	if(healTimer > 0){
+		healTimer--
+	}
+	if(Player.health < healthCurrent){
+		attemptingHeal = "false"
+	}
+	if((healTimer < 500 || enemyKills > killsCurrent) & attemptingHeal == "true"){
+		Player.health += healAmount
+		attemptingHeal = "false"
+	}
+}
 //debug info
 function drawDebugInfo(){
 	ctx.font = "15px arial"
@@ -1440,7 +1496,6 @@ function drawDebugInfo(){
 	ctx.fillText(facingDirection, 1100, 60)
 	ctx.fillText(Player.health+" hp",1100, 700)
 	ctx.fillText((biteyArray.length + skeletonArray.length)+" monsters left",1100,80)
-	ctx.fillText(magicBlastDamage+" "+magicBlastSpeed+" "+magicBlastCooldownTime,1050,750)
 }
 function collisionCheck(x1,y1,r1,x2,y2,r2){
 	xDist = x1 - x2
