@@ -770,17 +770,17 @@ class ShopItem {
 }
 //door entering stuff
 function doorCheck(){
-	if(Player.xPos > 500 && Player.xPos < 700 && Player.yPos - PLAYERSIZE < WALLSIZE + 5 && Room.upDoor != "closed" ){
+	if(Player.xPos > 500 && Player.xPos < 700 && Player.yPos - PLAYERSIZE - playerSpeed < WALLSIZE && Room.upDoor != "closed" ){
 		doorEntered = "down"
 		console.log("test")
 		return("true")
-	}else if(Player.yPos > 350 && Player.yPos < 550 && Player.xPos - PLAYERSIZE < WALLSIZE + 5 && Room.leftDoor != "closed" ){
+	}else if(Player.yPos > 350 && Player.yPos < 550 && Player.xPos - PLAYERSIZE - playerSpeed < WALLSIZE && Room.leftDoor != "closed" ){
 		doorEntered = "right"
 		return("true")
-	}else if(Player.xPos > 500 && Player.xPos < 700 && Player.yPos + PLAYERSIZE > 837 && Room.downDoor != "closed" ){
+	}else if(Player.xPos > 500 && Player.xPos < 700 && Player.yPos + PLAYERSIZE + playerSpeed > 837 && Room.downDoor != "closed" ){
 		doorEntered = "up"
 		return("true")
-	}else if(Player.yPos > 350 && Player.yPos < 550 && Player.xPos + PLAYERSIZE > 1137 && Room.rightDoor != "closed" ){
+	}else if(Player.yPos > 350 && Player.yPos < 550 && Player.xPos + PLAYERSIZE + playerSpeed> 1137 && Room.rightDoor != "closed" ){
 		doorEntered = "left"
 		return("true")
 	}else{
@@ -1356,7 +1356,7 @@ function checkSkeletonProj(){
 	}
 }
 class BossMonster{
-	constructor(bossX,bossY,bossProjCooldown,bossAttackPhase,bossTargetX,bossTargetY,bossPhaseTimer ){
+	constructor(bossX,bossY,bossProjCooldown,bossAttackPhase,bossTargetX,bossTargetY,bossPhaseTimer,bossCycle ){
 		this.xPos = bossX
 		this.yPos = bossY
 		this.cooldown = bossProjCooldown
@@ -1366,13 +1366,74 @@ class BossMonster{
 		this.targetX = bossTargetX
 		this.targetY = bossTargetY
 		this.phaseTimer = bossPhaseTimer
+		this.cycle = bossCycle
 	}
 	moveBoss(){
+		if(this.phase != "chase" && this.cycle == 0){
+			this.phase = "chase"
+			this.phaseTimer = 750
+		}
 		if(this.phase == "chase"){
 			this.targetX = Player.xPos
 			this.targetY = Player.yPos
+			if(this.phaseTimer == 0){
+				this.phase = "bullet"
+				this.cycle = 0
+			}else{
+				this.phaseTimer--
+			}
 		}else {
+			if(this.phase == "bullet" && this.phaseTimer == 0){
+				this.phase = "change"
+				random = Math.ceil(Math.random()*9)
+				if(random == 1){
+					this.targetX = 400
+					this.targetY = 250
+				}else if(random == 2){
+					this.targetX = 600
+					this.targetY = 250
+				}else if(random == 3){
+					this.targetX = 800
+					this.targetY = 250
+				}else if(random == 4){
+					this.targetX = 400
+					this.targetY = 450
+				}else if(random == 5){
+					this.targetX = 600
+					this.targetY = 450
+				}else if(random == 6){
+					this.targetX = 800
+					this.targetY = 450
+				}else if(random == 7){
+					this.targetX = 400
+					this.targetY = 650
+				}else if(random == 8){
+					this.targetX = 600
+					this.targetY = 650
+				}else {
+					this.targetX = 800
+					this.targetY = 650
+				}
+			}
+			if(this.xPos == this.targetX && this.yPos == this.targetY && this.phase == "change"){
+				this.phase = "aim"
+				this.phaseTimer = 50
+				
+			}
+			/*
+			
+		
+			if(this.phase == "aim" && this.phaseTimer == 0){
+				this.phase = "bullets"
+				this.phaseTimer = 100
+				if(this.cycle == 5){
 
+				}
+			}
+			if(this.phase == "bullets"){
+
+			}
+			*/
 		}
 		if(this.xPos >= this.targetX && this.xPos <= this.targetX){
 			if(this.yPos > this.targetY){
@@ -1453,12 +1514,11 @@ class BossMonster{
 						}
 					}
 				}
-				this.cooldown = 15
+				this.cooldown = 20
 			}else {
 				this.cooldown--
 			}
 		}else {
-			//do the stuff with the lines telegraph attack
 			if(this.phase == "bullets"){
 				if(this.cooldown == 0){
 					bossProjArray.push(new BossProj(this.xPos,this,yPos,"up",8))
@@ -1474,7 +1534,7 @@ class BossMonster{
 					this.cooldown-- 
 				}
 			}else {
-				
+				//aiming phase
 				ctx.strokeStyle = "red"
 				ctx.beginPath()
 				ctx.moveTo(this.xPos,this.yPos)
