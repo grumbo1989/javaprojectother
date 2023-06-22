@@ -97,6 +97,8 @@ var skeletonProjSpeed = 5
 var skeletonProjSize = 4
 var bossSize = 60
 var bossSpeed = 4
+var bossContactDamage = 10
+var bossProjDamage = 7
 var bossArray = []
 var bossProjArray = []
 //images
@@ -1354,50 +1356,152 @@ function checkSkeletonProj(){
 	}
 }
 class BossMonster{
-	constructor(bossX,bossY,bossProjCooldown,bossAttackPhase){
+	constructor(bossX,bossY,bossProjCooldown,bossAttackPhase,bossTargetX,bossTargetY,bossPhaseTimer ){
 		this.xPos = bossX
 		this.yPos = bossY
 		this.cooldown = bossProjCooldown
 		//boss has chase phase where he follows you and shoot you with 3 projectiles at once
 		//then there is bullet pain phase where he goes to a spot in the room and telegraphs an attack and shoots like tons of projectiles in 8 directions
 		this.phase = bossAttackPhase
+		this.targetX = bossTargetX
+		this.targetY = bossTargetY
+		this.phaseTimer = bossPhaseTimer
 	}
 	moveBoss(){
 		if(this.phase == "chase"){
-			if(this.xPos >= Player.xPos - bossSize && this.xPos <= Player.xPos + bossSize){
-				if(this.yPos > Player.yPos){
-					this.yPos -= bossSpeed
-				}else if(this.yPos < Player.yPos){
-					this.yPos += bossSpeed
-				}
-			}else if(this.yPos >= Player.yPos - bossSize && this.yPos <= Player.yPos + bossSize){
-				if(this.xPos > Player.xPos){
-					this.xPos -= bossSpeed
-				}else if(this.xPos < Player.xPos){
-					this.xPos += bossSpeed
-				}
-			}else {
-				if(this.yPos > Player.yPos){
-					this.yPos -= bossSpeed
-				}else if(this.yPos < Player.yPos){
-					this.yPos += bossSpeed
-				}
-				if(this.xPos > Player.xPos){
-					this.xPos -= bossSpeed
-				}else if(this.xPos < Player.xPos){
-					this.xPos += bossSpeed
-				}
-			}
+			this.targetX = Player.xPos
+			this.targetY = Player.yPos
 		}else {
 
+		}
+		if(this.xPos >= this.targetX && this.xPos <= this.targetX){
+			if(this.yPos > this.targetY){
+				this.yPos -= bossSpeed
+			}else if(this.yPos < this.targetY){
+				this.yPos += bossSpeed
+			}
+		}else if(this.yPos >= this.targetY && this.yPos <= this.targetY){
+			if(this.xPos > this.targetX){
+				this.xPos -= bossSpeed
+			}else if(this.xPos < this.targetX){
+				this.xPos += bossSpeed
+			}
+		}else {
+			if(this.yPos > this.targetY){
+				this.yPos -= bossSpeed
+			}else if(this.yPos < this.targetY){
+				this.yPos += bossSpeed
+			}
+			if(this.xPos > this.targetX){
+				this.xPos -= bossSpeed
+			}else if(this.xPos < this.targetX){
+				this.xPos += bossSpeed
+			}
 		}
 	}
 	shootBossProj(){
 		if(this.phase == "chase"){
-
+			if(this.cooldown == 0){
+				if(this.xPos < Player.xPos + PLAYERSIZE && this.xPos > Player.xPos - PLAYERSIZE){
+					if(this.yPos > Player.yPos){
+						//up
+						bossProjArray.push(new BossProj(this.xPos,this,yPos,"up",5))
+						bossProjArray.push(new BossProj(this.xPos,this,yPos,"upLeft",5))
+						bossProjArray.push(new BossProj(this.xPos,this,yPos,"upRight",5))
+					}else {
+						//down
+						bossProjArray.push(new BossProj(this.xPos,this,yPos,"down",5))
+						bossProjArray.push(new BossProj(this.xPos,this,yPos,"downLeft",5))
+						bossProjArray.push(new BossProj(this.xPos,this,yPos,"downRight",5))
+					}
+				}else if(this.yPos < Player.yPos + PLAYERSIZE && this.yPos > Player.yPos - PLAYERSIZE){
+					if(this.xPos > Player.xPos){
+						//right
+						bossProjArray.push(new BossProj(this.xPos,this.yPos,"right",5))
+						bossProjArray.push(new BossProj(this.xPos,this.yPos,"upRight",5))
+						bossProjArray.push(new BossProj(this.xPos,this.yPos,"downRight",5))
+					}else {
+						//left
+						bossProjArray.push(new BossProj(this.xPos,this.yPos,"left",5))
+						bossProjArray.push(new BossProj(this.xPos,this.yPos,"upLeft",5))
+						bossProjArray.push(new BossProj(this.xPos,this.yPos,"downLeft",5))
+					}
+				}else {
+					if(this.xPos > Player.xPos){
+						if(this.yPos > Player.yPos){
+							//up and right
+							bossProjArray.push(new BossProj(this.xPos,this.yPos,"upRight",5))
+							bossProjArray.push(new BossProj(this.xPos,this,yPos,"up",5))
+							bossProjArray.push(new BossProj(this.xPos,this.yPos,"right",5))
+						}else {
+							//down and right
+							bossProjArray.push(new BossProj(this.xPos,this.yPos,"downRight",5))
+							bossProjArray.push(new BossProj(this.xPos,this,yPos,"down",5))
+							bossProjArray.push(new BossProj(this.xPos,this.yPos,"right",5))
+						}
+					}else{
+						if(this.yPos > Player.yPos){
+							//up and left
+							bossProjArray.push(new BossProj(this.xPos,this.yPos,"upLeft",5))
+							bossProjArray.push(new BossProj(this.xPos,this,yPos,"up",5))
+							bossProjArray.push(new BossProj(this.xPos,this.yPos,"left",5))
+						}else {
+							//down and left
+							bossProjArray.push(new BossProj(this.xPos,this.yPos,"downLeft",5))
+							bossProjArray.push(new BossProj(this.xPos,this,yPos,"down",5))
+							bossProjArray.push(new BossProj(this.xPos,this.yPos,"left",5))
+						}
+					}
+				}
+				this.cooldown = 15
+			}else {
+				this.cooldown--
+			}
 		}else {
 			//do the stuff with the lines telegraph attack
-			bossProjArray.push(new BossProj(this.xPos,this,yPos,"up",6))
+			if(this.phase == "bullets"){
+				if(this.cooldown == 0){
+					bossProjArray.push(new BossProj(this.xPos,this,yPos,"up",8))
+					bossProjArray.push(new BossProj(this.xPos,this.yPos,"upLeft",8))
+					bossProjArray.push(new BossProj(this.xPos,this.yPos,"left",8))
+					bossProjArray.push(new BossProj(this.xPos,this.yPos,"downLeft",8))
+					bossProjArray.push(new BossProj(this.xPos,this.yPos,"down",8))
+					bossProjArray.push(new BossProj(this.xPos,this.yPos,"downRight",8))
+					bossProjArray.push(new BossProj(this.xPos,this.yPos,"right",8))
+					bossProjArray.push(new BossProj(this.xPos,this.yPos,"upRight",8))
+					this.cooldown = 5
+				}else {
+					this.cooldown-- 
+				}
+			}else {
+				
+				ctx.strokeStyle = "red"
+				ctx.beginPath()
+				ctx.moveTo(this.xPos,this.yPos)
+				//up
+				ctx.lineTo(this.xPos,this.yPos-1000)
+				ctx.moveTo(this.xPos,this.yPos)
+				//upleft
+				ctx.lineTo(this.xPos-1000,this.yPos-1000)
+				ctx.moveTo(this.xPos,this.yPos)
+				//left
+				ctx.lineTo(this.xPos-1000,this.yPos)
+				ctx.moveTo(this.xPos,this.yPos)
+				//downleft
+				ctx.lineTo(this.xPos-1000,this.yPos+1000)
+				ctx.moveTo(this.xPos,this.yPos)
+				//down
+				ctx.lineTo(this.xPos,this.yPos+1000)
+				ctx.moveTo(this.xPos,this.yPos)
+				//downright
+				ctx.lineTo(this.xPos+1000,this.yPos+1000)
+				ctx.moveTo(this.xPos,this.yPos)
+				//right
+				ctx.lineTo(this.xPos+1000,this.yPos)
+				ctx.moveTo(this.xPos,this.yPos)
+				//upright
+				ctx.lineTo(this.xPos+1000,this.yPos-1000)
+			}
 		}
 	}
 }
