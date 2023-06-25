@@ -45,8 +45,8 @@ var magicBlastCooldownTime = 10
 var fireballTimer = 0
 var fireballCooldownTime = 1
 var fireballSpeed = 7
-var fireballExplosionSize = 50
-var fireballDamage = 8
+var fireballExplosionSize = 51
+var fireballDamage = 5
 var fireballUnlocked = "false"
 var numProjectiles = 0
 var maxProjectiles = 500
@@ -61,15 +61,15 @@ var trueDist = 0
 var iFrames = 0
 var roomReward
 var doorEntered = "down"
-var loadingScreen = "false"
-var rewardSize = 24
+var loadingScreen = 0
+var rewardSize = 36
 var rewardPreviewSize = 30
 var dead = "false"
 var random
 var coinCount = 0
-var addChance
 var enemyCap = 5
 var minEnemies = 3
+var spawnAttemptMin
 var enemyKills = 0
 var killsCurrent
 var healthCurrent
@@ -77,6 +77,10 @@ var healTimer = 0
 var healAmount = 15
 var healUnlocked = "false"
 var attemptingHeal = "false"
+var roomHealCap = 1
+var roomHeals = 0
+var textArray = []
+var lastDamageSource 
 
 //arrays
 var possibleRewards = ["health","spell","player","miniboss","boss"]
@@ -88,22 +92,44 @@ var fireballArray = []
 //enemiesd
 var biteyArray = []
 var skeletonArray = []
-var skeletonSize = 18
+var skeletonSize = 15
 var skeletonSpeed = 1
 var skeletonContactDamage = 3
 var skeletonProjDamage = 8
 var skeletonProjArray = []
 var skeletonProjSpeed = 5
-var skeletonProjSize = 4
+var skeletonProjSize = 6
+var skeletonCooldownTimer = 100
 var bossSize = 60
 var bossSpeed = 4
 var bossContactDamage = 10
 var bossProjDamage = 7
 var bossArray = []
 var bossProjArray = []
+var bossProjSize = 9
+var turtleArray = []
+var turtleSize = 24
+var turtleySrEncountered = "true"
+var bigTurtleSize = 45
+var bigTurtleArray = []
 //images
+
+//upgrades
 var heartUpgradeImage = new Image
 heartUpgradeImage.src = "heartUpgrade.png"
+var largeHealthImage = new Image
+largeHealthImage.src = "largeHealth.png"
+var spellUpgradeImage = new Image
+spellUpgradeImage.src = "spellUpgrade.png"
+var bigSpellImage = new Image
+bigSpellImage.src = "bigSpellUpgrade.png"
+var strengthUpgradeImage = new Image
+strengthUpgradeImage.src = "strengthUpgrade.png"
+var coinPileImage = new Image
+coinPileImage.src = "coinPile.png"
+var coinBagImage = new Image
+coinBagImage.src = "coinChest.png"
+//background stuff
 var backgroundImage = new Image
 backgroundImage.src = "background.png"
 var doorUpOpenImage = new Image
@@ -114,6 +140,7 @@ var doorDownOpenImage = new Image
 doorDownOpenImage.src = "doorDown.png"
 var doorRightOpenImage = new Image
 doorRightOpenImage.src = "doorRight.png"
+//next room previews
 var heartUpgradePreviewImage = new Image
 heartUpgradePreviewImage.src = "heartUpgradePreview.png"
 var playerUpgradePreviewImage = new Image
@@ -124,18 +151,70 @@ var minibossPreviewImage = new Image
 minibossPreviewImage.src = "minibossPreview.png"
 var bossPreviewImage = new Image
 bossPreviewImage.src = "bossPreview.png"
+var coinPreviewImage = new Image
+coinPreviewImage.src = "coinPreview.png"
+//shop stuff
+var merchantImage = new Image
+merchantImage.src = "shopMerchant.png"
 var shopPreviewImage = new Image
 shopPreviewImage.src = "shopPreview.png"
+var shopHealImage = new Image
+shopHealImage.src = "shopHeal.png"
+var shopSpeedImage = new Image
+shopSpeedImage.src = "shopSpeed.png"
+var shopSpellImage = new Image
+shopSpellImage.src = "shopSpell.png"
+var shopFireballImage = new Image
+shopFireballImage.src = "shopFireball.png"
+var shopHealSpellImage = new Image
+shopHealSpellImage.src = "shopHealSpell.png"
+//spell sprites
 var magicBlastImage = new Image
 magicBlastImage.src = "spell1.png"
+var fireballImage = new Image
+fireballImage.src = "fireball.png"
+var fireballBoomImage = new Image
+fireballBoomImage.src = "fireballExplosion.png"
+//monster sprites
 var biteyImage = new Image
 biteyImage.src = "bitey.png"
 var skeletonImage = new Image
 skeletonImage.src = "skeleton.png"
+var skeletonProjImage = new Image
+skeletonProjImage.src = "skeletonProj.png"
 var minibossImage = new Image 
 minibossImage.src = "miniboss.png"
+var bossProjImage = new Image
+bossProjImage.src = "bossProj.png"
+//turtley jr
+var turtleImage = new Image
+turtleImage.src = "turtle.png"
+var turtleShellImage = new Image
+turtleShellImage.src = "turtleShell.png"
+var turtleSpin1Image = new Image
+turtleSpin1Image.src = "turtleSpin1.png"
+var turtleSpin2Image = new Image
+turtleSpin2Image.src = "turtleSpin2.png"
+var turtleSpin3Image = new Image
+turtleSpin3Image.src = "turtleSpin3.png"
+var turtleSpin4Image = new Image
+turtleSpin4Image.src = "turtleSpin4.png"
+//turtley sr
+var turtleySrImage = new Image
+turtleySrImage.src = "turtleySr.png"
+var turtleySrLeftImage = new Image
+turtleySrLeftImage.src = "turtleySrLeft.png"
+var turtleySrShellImage = new Image
+turtleySrShellImage.src = "turtleySrShell.png"
+var turtleySrSpin1Image = new Image
+turtleySrSpin1Image.src = "turtleySrSpin1.png"
+var turtleySrSpin2Image = new Image
+turtleySrSpin2Image.src = "turtleySrSpin2.png"
+//other stuff
 var killCountImage = new Image
 killCountImage.src = "killCount.png"
+var restartButtonImage = new Image
+restartButtonImage.src = "restartButton.png"
 //canvas setup
 window.onload=startCanvas
 function startCanvas(){
@@ -145,10 +224,12 @@ function startCanvas(){
 }
 function gameStart(){
 	//resets the game 
+	ctx.textAlign = "center"
 	Player.xPos = 600
 	Player.yPos = 100
 	Player.health = 75
 	Player.maxHealth = 75
+	playerSpeed = 4
 	Room.rewardX = 576
 	Room.rewardY = 400
 	Room.state = 0
@@ -165,18 +246,25 @@ function gameStart(){
 	fireballCooldownTime = 40
 	fireballSpeed = 7
 	fireballExplosionSize = 50
-	fireballDamage = 8
+	fireballDamage = 5
 	fireballUnlocked = "false"
 	healTimer = 0
 	healUnlocked = "false"
 	healAmount = 15
+	roomHealCap = 1
 	enemyKills = 0
 	roomNum = 1
+	coinCount = 0
 	doorEntered = "down"
 	dead = "false"
+	turtleySrEncountered = "false"
 	biteyArray = []
 	skeletonArray = []
 	skeletonProjArray = []
+	turtleArray = []
+	bigTurtleArray = []
+	bossArray = []
+	bossProjArray = []
 	generateNewRoom()
 }
 //update canvas
@@ -212,15 +300,15 @@ function updateCanvas(){
 	}
 	ctx.font = "30px Papyrus"
 	ctx.fillStyle = "black"
-	ctx.fillText("Room "+roomNum,60,90)
+	ctx.fillText("Room "+roomNum,120,90)
 	ctx.fillStyle = "gold"
-	ctx.fillText(coinCount+" Coins",1020,90)
+	ctx.fillText(coinCount+" Coins",1080,90)
 	ctx.drawImage(killCountImage,1000,800)
 	ctx.fillStyle = "#555555"
 	ctx.font = "60px Papyrus"
-	ctx.fillText(enemyKills,1045,835)
+	ctx.fillText(enemyKills,1085,835)
 	numProjectiles = magicBlastArray.length
-	numMonsters = biteyArray.length + skeletonArray.length
+	numMonsters = biteyArray.length + skeletonArray.length + bossArray.length + turtleArray.length + bigTurtleArray.length
 	if(dead == "false"){
 		//code that only needs to happen if you aren't dead 
 		//move code and wall collision check
@@ -247,6 +335,16 @@ function updateCanvas(){
 			fireballArray[count].moveFireball()
 			count++
 		}
+		if(bossArray.length != 0){
+			bossArray[0].moveBoss()
+			bossArray[0].shootBossProj()
+			checkBoss()
+		}
+		count = 0
+		while(count < bossProjArray.length){
+			bossProjArray[count].moveBossProj()
+			count++
+		}
 		healCheck()
 		count = 0
 		while(count < biteyArray.length){
@@ -264,6 +362,15 @@ function updateCanvas(){
 			skeletonProjArray[count].moveSkeletonProj()
 			count++
 		}
+		count = 0
+		while(count < turtleArray.length){
+			turtleArray[count].moveTurtle()
+			count++
+		}
+		if(bigTurtleArray.length != 0){
+			bigTurtleArray[0].moveBigTurtle()
+			turtleySrEncountered = "true"
+		}
 		if(fireballCooldownTime < 15){
 			fireballCooldownTime = 15
 		}
@@ -277,11 +384,14 @@ function updateCanvas(){
 		checkMonsters()
 		checkMonsters2()
 		checkSkeletonProj()
+		checkTurtles()
+		checkBigTurtle()
 		drawMonsters()
 	}else{
 		inControl = "false"
 	}
 	roomStateCheck()
+	drawPopUpText()
 	if(loadingScreen > 0){
 		console.log(loadingScreen)
 		loadingScreen--
@@ -318,6 +428,7 @@ function roomStateCheck(){
 				drawShopItems()
 			}
 			if(doorCheck() == "true"){
+				roomHeals = 0
 				roomNum++
 				loadingScreen = 25
 				if(doorEntered == "up"){
@@ -374,7 +485,14 @@ function makeRewardVariety(type){
 		}
 	}
 	if(type == "boss"){
-		Reward.variety = "newSpell"
+		random = Math.random() * 3
+		if(random > 2){
+			Reward.variety = "largeHealth"
+		}else if(random > 1){
+			Reward.variety = "largeSpell"
+		}else{
+			Reward.variety = "coinBag"
+		}
 	}
 	if(type == "shop"){
 		Reward.variety = "shop"
@@ -391,57 +509,73 @@ function grantReward(variety){
 	if(variety == "health"){
 		Player.maxHealth += 25
 		Player.health += 25
+		textArray.push(new PopUpText(Player.xPos,Player.yPos,"+25 Max HP","white","15px Comic Sans MS",20))
 	}
 	if(variety == "damage"){
 		magicBlastDamage += 2
+		textArray.push(new PopUpText(Player.xPos,Player.yPos,"All Damage Up","white","15px Comic Sans MS",20))
 		if(fireballUnlocked == "true"){
 			fireballDamage += 3
 		}
 	}
 	if(variety == "speed"){
 		playerSpeed++
+		textArray.push(new PopUpText(Player.xPos,Player.yPos,"Movement Speed Up","white","15px Comic Sans MS",20))
 	}
 	if(variety == "spell"){
 		if(Math.random()*2 > 1 && fireballUnlocked == "true"){
 			random = Math.random() * 3
 			if(random > 2){
 				fireballDamage += 3
+				textArray.push(new PopUpText(Player.xPos,Player.yPos,"Fireball Damage Up","white","15px Comic Sans MS",20))
 			}else if(random > 1){
 				fireballCooldownTime -= 2
+				textArray.push(new PopUpText(Player.xPos,Player.yPos,"Fireball Cooldown Speed Up","white","15px Comic Sans MS",20))
 			}else{
 				fireballSpeed += 1
+				textArray.push(new PopUpText(Player.xPos,Player.yPos,"Fireball Projectile Speed Up","white","15px Comic Sans MS",20))
 			}
 		}else {
 			random = Math.random() * 3
 			if(random > 2){
 				magicBlastDamage += 2
+				textArray.push(new PopUpText(Player.xPos,Player.yPos,"Magic Blast Damage Up","white","15px Comic Sans MS",20))
 			}else if(random > 1){
 				magicBlastCooldownTime -= 1
+				textArray.push(new PopUpText(Player.xPos,Player.yPos,"Magic Blast Cooldown Speed Up","white","15px Comic Sans MS",20))
 			}else{
 				magicBlastSpeed += 1
+				textArray.push(new PopUpText(Player.xPos,Player.yPos,"Magic Blast Projectile Speed Up","white","15px Comic Sans MS",20))
 			}
 		}
 	}
 	if(variety == "largeHealth"){
 		Player.maxHealth += 50
 		Player.health += 50
+		textArray.push(new PopUpText(Player.xPos,Player.yPos,"+50 Max HP","white","15px Comic Sans MS",20))
 	}
 	if(variety == "largeSpell"){
 		if(Math.random()*2 > 1 && fireballUnlocked == "true"){
 			fireballDamage += 2
 			fireballSpeed += 1
 			fireballCooldownTime -= 2
+			textArray.push(new PopUpText(Player.xPos,Player.yPos,"All Fireball Stats Up","white","15px Comic Sans MS",20))
 		}else {
 			magicBlastDamage += 2
 			magicBlastCooldownTime -= 1
 			magicBlastSpeed += 1
+			textArray.push(new PopUpText(Player.xPos,Player.yPos,"All Magic Blast Stats Up","white","15px Comic Sans MS",20))
 		}
 	}
 	if(variety == "coinBag"){
-		coinCount += Math.floor(Math.random()*40) + 60
+		random =  Math.floor(Math.random()*40) + 60
+		coinCount += random
+		textArray.push(new PopUpText(Player.xPos,Player.yPos,"+"+random+" coins","gold","15px Comic Sans MS",20))
 	}
 	if(variety == "coinPile"){
-		coinCount += Math.floor(Math.random()*15) + 15
+		random = Math.floor(Math.random()*15) + 25
+		coinCount += random
+		textArray.push(new PopUpText(Player.xPos,Player.yPos,"+"+random+" coins","gold","15px Comic Sans MS",20))
 	}
 }
 //room stuff
@@ -501,11 +635,18 @@ function drawRewards(){
 	if(Reward.state == "1"){
 		if(Reward.type == "health"){
 			ctx.drawImage(heartUpgradeImage,Room.rewardX,Room.rewardY)
-		}else {
-			ctx.fillStyle = "#EFB0FF"
-			ctx.beginPath()
-			ctx.arc(Room.rewardX, Room.rewardY, rewardSize, 0, 2*Math.PI)
-			ctx.fill()
+		}else if(Reward.variety == "largeHealth"){
+			ctx.drawImage(largeHealthImage,Room.rewardX,Room.rewardY)
+		}else if(Reward.type == "spell"){
+			ctx.drawImage(spellUpgradeImage,Room.rewardX,Room.rewardY)
+		}else if(Reward.variety == "largeSpell"){
+			ctx.drawImage(bigSpellImage,Room.rewardX,Room.rewardY)
+		}else if(Reward.type == "player"){
+			ctx.drawImage(strengthUpgradeImage,Room.rewardX,Room.rewardY)
+		}else if(Reward.variety == "coinPile"){
+			ctx.drawImage(coinPileImage,Room.rewardX,Room.rewardY)
+		}else if(Reward.variety == "coinBag"){
+			ctx.drawImage(coinBagImage,Room.rewardX,Room.rewardY)
 		}
 	}
 }
@@ -530,10 +671,7 @@ function drawNextRewards(){
 			ctx.drawImage(shopPreviewImage, 570, 70)
 		}
 		if(Room.upDoor == "coins"){
-			ctx.fillStyle = "gold"
-			ctx.beginPath()
-			ctx.arc(600,100,30,0,2*Math.PI)
-			ctx.fill()
+			ctx.drawImage(coinPreviewImage, 570, 70)
 		}
 	}
 	if(Room.leftDoor != "closed"){
@@ -556,10 +694,7 @@ function drawNextRewards(){
 			ctx.drawImage(shopPreviewImage, 70, 420)
 		}
 		if(Room.leftDoor == "coins"){
-			ctx.fillStyle = "gold"
-			ctx.beginPath()
-			ctx.arc(100,450,30,0,2*Math.PI)
-			ctx.fill()
+			ctx.drawImage(coinPreviewImage, 70, 420)
 		}
 	}
 	if(Room.downDoor != "closed"){
@@ -582,10 +717,7 @@ function drawNextRewards(){
 			ctx.drawImage(shopPreviewImage, 570, 770)
 		}
 		if(Room.downDoor == "coins"){
-			ctx.fillStyle = "gold"
-			ctx.beginPath()
-			ctx.arc(600,800,30,0,2*Math.PI)
-			ctx.fill()
+			ctx.drawImage(coinPreviewImage, 570, 770)
 		}
 	}
 	if(Room.rightDoor != "closed"){
@@ -608,116 +740,231 @@ function drawNextRewards(){
 			ctx.drawImage(shopPreviewImage, 1070, 420)
 		}
 		if(Room.rightDoor == "coins"){
-			ctx.fillStyle = "gold"
-			ctx.beginPath()
-			ctx.arc(1100,450,30,0,2*Math.PI)
-			ctx.fill()
+			ctx.drawImage(coinPreviewImage, 1070, 420)
 		}
 	}
 }
 function generateNewRoom(){
 	shopItemArray = []
+	skeletonCooldownTime = 100
 	if(Reward.type == "miniboss"){
-		biteyArray.push(new Bitey(600, 450, 80 + roomNum * 3, 45, 14, 3))
+		if(Math.random() * 2 > 1){
+			biteyArray.push(new Bitey(600, 450, 85 + roomNum * 2, 45, 14, 3))
+		}else {
+			bigTurtleArray.push(new TurtleySr(600, 450, 75 + roomNum * 2, "normal",150,1,5,"upLeft"))
+		}
 	}else if(Reward.type == "shop"){
-		console.log("swwaaasdj")
 		if((fireballUnlocked == "true" && healUnlocked == "true") || Math.random() * 5 > 3){
-			shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+5, "heal","false" ))
-			shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+20, "spell","false"))
-			shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+15, "player","false"))
+			shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+5+Math.floor(roomNum/5)*5, "heal","false" ))
+			shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+20+Math.floor(roomNum/5)*5, "spell","false"))
+			shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+15+Math.floor(roomNum/5)*5, "player","false"))
 		}else{
-			shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+5, "heal","false"))
-			shopItemArray.push(new ShopItem(75, "newSpell","false"))
-			shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+15, "player","false"))
+			shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+5+Math.floor(roomNum/5)*5, "heal","false"))
+			if(healUnlocked == "false" && fireballUnlocked == "false"){
+				if(Math.random()*5>2){
+					shopItemArray.push(new ShopItem(100+Math.floor(roomNum/5)*10, "fireball","false"))
+				}else{
+					shopItemArray.push(new ShopItem(75, "healSpell","false"))
+				}
+			}else if(healUnlocked == "false" && fireballUnlocked == "true"){
+				shopItemArray.push(new ShopItem(75, "healSpell","false"))
+			}else {
+				shopItemArray.push(new ShopItem(100+Math.floor(roomNum/5)*10, "fireball","false"))
+			}
+			shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+15+Math.floor(roomNum/5)*5, "player","false"))
 		}
 	}else if(Reward.type == "boss"){
-
+		bossArray.push(new BossMonster(600,450,roomNum*10,50,"chase",0,0,750,0))
+	}else if(roomNum > 10 && Math.random() * 13 > 11){
+		random = Math.floor(Math.random() * 3)
+		if(random == 2){
+			textArray.push(new PopUpText(600,375,"Turtle Mayhem!","DarkGreen","35px Comic Sans MS",45))
+			count = 0
+			spawnedCount = 0
+			if(roomNum > 50){
+				minEnemies = 15
+				enemyCap = 65
+				spawnAttemptMin = 45
+			}else if(roomNum > 30){
+				minEnemies = 10
+				enemyCap = 25
+				spawnAttemptMin = 20
+			}else if(roomNum > 10){
+				minEnemies = 5
+				enemyCap = 15
+				spawnAttemptMin = 15
+			}else {
+				minEnemies = 3
+				enemyCap = 7
+				spawnAttemptMin = 7
+			}
+			while(spawnedCount < enemyCap && count < spawnAttemptMin){
+				if(spawnedCount < minEnemies){
+					turtleArray.push(new TurtleyJr(Math.floor(Math.random() * 800)+200,Math.floor(Math.random() * 500)+200,20+(Math.floor(roomNum/5)*5),"normal",350+Math.floor(Math.random() * 100),1,5,"upLeft"))
+					spawnedCount++
+				}else {
+					if((Math.random()*100)+Math.floor((roomNum-10)/5)*2>70){
+						turtleArray.push(new TurtleyJr(Math.floor(Math.random() * 800)+200,Math.floor(Math.random() * 500)+200,20+(Math.floor(roomNum/5)*5),"normal",350+Math.floor(Math.random() * 100),1,5,"upLeft"))
+						spawnedCount++
+					}else if(count >= spawnAttemptMin){
+						count = enemyCap
+					}
+				}
+				count++
+			}
+		}else if(random == 1){
+			textArray.push(new PopUpText(600,375,"Double Trouble!","Maroon","35px Comic Sans MS",45))
+			biteyArray.push(new Bitey(800, 200, 85 + roomNum * 2, 45, 14, 3))
+			biteyArray.push(new Bitey(400, 700, 85 + roomNum * 2, 45, 14, 3))
+		}else{
+			skeletonCooldownTime = 25
+			textArray.push(new PopUpText(600,375,"Skeleton Party!","Gainsboro","35px Comic Sans MS",45))
+			count = 0
+			spawnedCount = 0
+			if(roomNum > 50){
+				minEnemies = 15
+				enemyCap = 65
+				spawnAttemptMin = 45
+			}else if(roomNum > 30){
+				minEnemies = 10
+				enemyCap = 25
+				spawnAttemptMin = 20
+			}else if(roomNum > 10){
+				minEnemies = 5
+				enemyCap = 15
+				spawnAttemptMin = 15
+			}else {
+				minEnemies = 3
+				enemyCap = 7
+				spawnAttemptMin = 7
+			}
+			while(spawnedCount < enemyCap && count < spawnAttemptMin){
+				if(spawnedCount < minEnemies){
+					skeletonArray.push(new Skeleton(Math.floor(Math.random() * 800)+200,Math.floor(Math.random() * 500)+200,15+(Math.floor(roomNum/5)*3),100))
+					spawnedCount++
+				}else {
+					if((Math.random()*100)+Math.floor((roomNum-10)/5)*2>70){
+						skeletonArray.push(new Skeleton(Math.floor(Math.random() * 800)+200,Math.floor(Math.random() * 500)+200,15+(Math.floor(roomNum/5)*3),100))
+						spawnedCount++
+					}else if(count >= spawnAttemptMin){
+						count = enemyCap
+					}
+				}
+				count++
+			}
+		}
 	}else{
 		
 		count = 0
 		spawnedCount = 0
-		addChance = 100
-		if(roomNum < 15){
-			minEnemies = 3
-			enemyCap = 7
-		}else {
+		if(roomNum > 50){
+			minEnemies = 15
+			enemyCap = 65
+			spawnAttemptMin = 45
+		}else if(roomNum > 30){
+			minEnemies = 10
+			enemyCap = 25
+			spawnAttemptMin = 20
+		}else if(roomNum > 10){
 			minEnemies = 5
 			enemyCap = 15
+			spawnAttemptMin = 15
+		}else {
+			minEnemies = 3
+			enemyCap = 7
+			spawnAttemptMin = 7
 		}
-		while(count < enemyCap){
+		while(spawnedCount < enemyCap && count < spawnAttemptMin){
 			if(spawnedCount < minEnemies){
-				if(Math.random()*2<1){
+				if(turtleySrEncountered == "true"){
+						random = Math.floor(Math.random()*11)
+				}else{
+					random = Math.floor(Math.random()*9)
+				}
+				if(random <= 4){
 					biteyArray.push(new Bitey(Math.floor(Math.random() * 800)+200,Math.floor(Math.random() * 500)+200,20+(Math.floor(roomNum/5)*5),20,5+Math.floor(roomNum/5),2))
-				}else {
+				}else if(random <= 8){
 					skeletonArray.push(new Skeleton(Math.floor(Math.random() * 800)+200,Math.floor(Math.random() * 500)+200,15+(Math.floor(roomNum/5)*3),100))
+				}else {
+					turtleArray.push(new TurtleyJr(Math.floor(Math.random() * 800)+200,Math.floor(Math.random() * 500)+200,20+(Math.floor(roomNum/5)*5),"normal",350+Math.floor(Math.random() * 100),1,5,"upLeft"))
 				}
 				spawnedCount++
-				
 			}else {
-				if((Math.random()*100)+Math.floor(roomNum/5)*2>70){
-					if(Math.random()*2<1){
+				if((Math.random()*100)+Math.floor((roomNum-10)/5)*2>70){
+					if(turtleySrEncountered == "true"){
+						random = Math.floor(Math.random()*11)
+					}else{
+						random = Math.floor(Math.random()*9)
+					}
+					if(random <= 4){
 						biteyArray.push(new Bitey(Math.floor(Math.random() * 800)+200,Math.floor(Math.random() * 500)+200,20+(Math.floor(roomNum/5)*5),20,5+Math.floor(roomNum/5),2))
-					}else {
+					}else if(random <= 8){
 						skeletonArray.push(new Skeleton(Math.floor(Math.random() * 800)+200,Math.floor(Math.random() * 500)+200,15+(Math.floor(roomNum/5)*3),100))
+					}else {
+						turtleArray.push(new TurtleyJr(Math.floor(Math.random() * 800)+200,Math.floor(Math.random() * 500)+200,20+(Math.floor(roomNum/5)*5),"normal",350+Math.floor(Math.random() * 100),1,5,"upLeft"))
 					}
 					spawnedCount++
+				}else if(count >= spawnAttemptMin){
+					count = enemyCap
 				}
 			}
 			count++
 		}
-		
 	}
 	Reward.state = 0
 }
 //shop code
 function drawShopItems(){
+	ctx.drawImage(merchantImage,200,230)
+	ctx.font = "bold 25px Papyrus"
+	ctx.fillStyle = "white"
+	if(roomNum > 10 && roomNum < 15){
+		ctx.fillText("Inflation's been bad lately so I'm afraid I have to increase the prices.",400,210)
+	}else {
+		ctx.fillText("Welcome... I sell only the finest potions here.",370,210)
+	}
 	if(shopItemArray[0].bought == "false"){
-		ctx.fillStyle = "#DC143C"
-		ctx.beginPath()
-		ctx.arc(400,300,SHOPITEMSIZE,0,2*Math.PI)
-		ctx.fill()
+		ctx.drawImage(shopHealImage,370,270)
 		ctx.font = "20px Papyrus"
 		if(coinCount >= shopItemArray[0].cost){
 			ctx.fillStyle = "gold"
 		}else {
 			ctx.fillStyle = "black"
 		}
-		ctx.fillText(shopItemArray[0].cost+" coins", 360, 350)
+		ctx.fillText(shopItemArray[0].cost+" coins", 400, 350)
 	}
 	if(shopItemArray[1].bought == "false"){
-		if(shopItemArray[1].type == "newSpell"){
-			ctx.fillStyle = "#FAFAD2"
-		}else {
-			ctx.fillStyle = "#FFF0F5"
+		if(shopItemArray[1].type == "fireball"){
+			ctx.drawImage(shopFireballImage,570,270)
+		}else if(shopItemArray[1].type == "healSpell"){
+			ctx.drawImage(shopHealSpellImage,570,270)
+		}else{
+			ctx.drawImage(shopSpellImage,570,270)
 		}
-		ctx.beginPath()
-		ctx.arc(600,300,SHOPITEMSIZE,0,2*Math.PI)
-		ctx.fill()
 		if(coinCount >= shopItemArray[1].cost){
 			ctx.fillStyle = "gold"
 		}else {
 			ctx.fillStyle = "black"
 		}
 		ctx.font = "20px Papyrus"
-		ctx.fillText(shopItemArray[1].cost+" coins", 560, 350)
+		ctx.fillText(shopItemArray[1].cost+" coins", 600, 350)
 	}
 	if(shopItemArray[2].bought == "false"){
-		ctx.fillStyle = "#87CEFA"
-		ctx.beginPath()
-		ctx.arc(800,300,SHOPITEMSIZE,0,2*Math.PI)
-		ctx.fill()
+		ctx.drawImage(shopSpeedImage,770,270)
 		if(coinCount >= shopItemArray[2].cost){
 			ctx.fillStyle = "gold"
 		}else {
 			ctx.fillStyle = "black"
 		}
 		ctx.font = "20px Papyrus"
-		ctx.fillText(shopItemArray[2].cost+" coins", 760, 350)
+		ctx.fillText(shopItemArray[2].cost+" coins", 800, 350)
 	}
 }
 function checkShopItems(){
 	if(collisionCheck(400,300,SHOPITEMSIZE,Player.xPos,Player.yPos,PLAYERSIZE) && coinCount >= shopItemArray[0].cost && shopItemArray[0].bought == "false"){
-		Player.health += Math.floor(Math.random()*16) + 35
+		random = Math.floor(Math.random()*16) + 35
+		Player.health += random
+		textArray.push(new PopUpText(Player.xPos,Player.yPos,"+"+random+" HP","white","15px Comic Sans MS",20))
 		if(Player.health > Player.maxHealth){
 			Player.health = Player.maxHealth
 		}
@@ -725,26 +972,28 @@ function checkShopItems(){
 		shopItemArray[0].bought = "true"
 	}
 	if(collisionCheck(600,300,SHOPITEMSIZE,Player.xPos,Player.yPos,PLAYERSIZE) && coinCount >= shopItemArray[1].cost && shopItemArray[1].bought == "false"){
-		if(shopItemArray[1].type == "newSpell"){
-			if(fireballUnlocked == "false" && healUnlocked == "false"){
-				if(Math.random()*5 > 2){
-					fireballUnlocked = "true"
-				}else {
-					healUnlocked = "true"
-				}
-			}else if(healUnlocked == "false"){
-				healUnlocked = "true"
-			}else {
-				fireballUnlocked = "false"
-			}
-		}else {
-			if(Math.random()*2 > 1){
+		if(shopItemArray[1].type == "fireball"){
+			fireballUnlocked = "true"
+			textArray.push(new PopUpText(Player.xPos,Player.yPos,"Unlocked Fireball! Press J to shoot an explosive fireball","white","15px Comic Sans MS",40))
+		}else if(shopItemArray[1].type == "healSpell"){
+			healUnlocked = "true"
+			textArray.push(new PopUpText(Player.xPos,Player.yPos,"Unlocked Heal! L to activate, can only be used a few times per room.","white","15px Comic Sans MS",40))
+		}else{
+			random = Math.random() * 3
+			if(random > 2){
 				fireballDamage += 2
 				fireballSpeed += 1
 				fireballCooldownTime -= 2
-			}else {
+				textArray.push(new PopUpText(Player.xPos,Player.yPos,"All Fireball Stats Up","white","15px Comic Sans MS",20))
+			}else if(random > 1){
 				magicBlastDamage += 2
 				magicBlastCooldownTime -= 1
+				magicBlastSpeed += 1
+				textArray.push(new PopUpText(Player.xPos,Player.yPos,"All Magic Blast Stats Up","white","15px Comic Sans MS",20))
+			}else{
+				healAmount += 5
+				roomHealCap
+				textArray.push(new PopUpText(Player.xPos,Player.yPos,"Heal Spell Stats Up","white","15px Comic Sans MS",20))
 			}
 		}
 		coinCount -= shopItemArray[1].cost
@@ -754,8 +1003,10 @@ function checkShopItems(){
 		random = Math.floor(Math.random()*2)
 		if(random == 1){
 			playerSpeed += 1
+			textArray.push(new PopUpText(Player.xPos,Player.yPos,"Movement Speed Up","white","15px Comic Sans MS",20))
 		}else {
 			dashCooldown += 3
+			textArray.push(new PopUpText(Player.xPos,Player.yPos,"Dash Cooldown Speed Up","white","15px Comic Sans MS",20))
 		}
 		coinCount -= shopItemArray[2].cost
 		shopItemArray[2].bought = "true"
@@ -820,8 +1071,10 @@ function drawPlayer(){
 }
 function youLostLmao(){
 	dead = "true"
-	ctx.fillStyle = "blue"
-	ctx.fillRect(450,450,300,100)
+	ctx.drawImage(restartButtonImage,450,450)
+	ctx.fillStyle = "red"
+	ctx.font = "bold 40px Papyrus"
+	ctx.fillText("Killed by: "+lastDamageSource,600,370)
 }
 //health bar
 function updateHealthBar(){
@@ -1163,19 +1416,19 @@ class Skeleton{
 			//will only throw when the projectile will hit the player (if they were to not move once it was thrown)
 			if(this.xPos < Player.xPos + PLAYERSIZE && this.xPos > Player.xPos - PLAYERSIZE && this.yPos > Player.yPos){
 				skeletonProjArray.push(new SkeletonProj(this.xPos,this.yPos,"up"))
-				this.cooldown = 100
+				this.cooldown = skeletonCooldownTime
 			}
 			if(this.yPos < Player.yPos + PLAYERSIZE && this.yPos > Player.yPos - PLAYERSIZE && this.xPos > Player.xPos){
 				skeletonProjArray.push(new SkeletonProj(this.xPos,this.yPos,"left"))
-				this.cooldown = 100
+				this.cooldown = skeletonCooldownTime
 			}
 			if(this.xPos < Player.xPos + PLAYERSIZE && this.xPos > Player.xPos - PLAYERSIZE && this.yPos < Player.yPos){
 				skeletonProjArray.push(new SkeletonProj(this.xPos,this.yPos,"down"))
-				this.cooldown = 100
+				this.cooldown = skeletonCooldownTime
 			}
 			if(this.yPos < Player.yPos + PLAYERSIZE && this.yPos > Player.yPos - PLAYERSIZE && this.xPos < Player.xPos){
 				skeletonProjArray.push(new SkeletonProj(this.xPos,this.yPos,"right"))
-				this.cooldown = 100
+				this.cooldown = skeletonCooldownTime
 			}
 		}else{
 			this.cooldown--
@@ -1200,6 +1453,262 @@ class SkeletonProj{
 		}	
 	}
 }
+class TurtleyJr{
+	constructor(turtleX,turtleY,turtleHealth,turtlePhase,turtlePhaseTimer,turtleSpeed,turtleDamage,turtleDirection){
+		this.xPos = turtleX
+		this.yPos = turtleY
+		this.health = turtleHealth
+		this.phase = turtlePhase
+		this.phaseTimer = turtlePhaseTimer
+		this.speed = turtleSpeed
+		this.damage = turtleDamage
+		this.direction = turtleDirection
+	}
+	moveTurtle(){
+		if(this.phase == "normal"){
+			this.damage = 5
+			if(this.xPos >= Player.xPos - turtleSize && this.xPos <= Player.xPos + turtleSize){
+				if(this.yPos > Player.yPos){
+					this.yPos -= this.speed
+				}else if(this.yPos < Player.yPos){
+					this.yPos += this.speed
+				}
+			}else if(this.yPos >= Player.yPos - turtleSize && this.yPos <= Player.yPos + turtleSize){
+				if(this.xPos > Player.xPos){
+					this.xPos -= this.speed
+				}else if(this.xPos < Player.xPos){
+					this.xPos += this.speed
+				}
+			}else {
+				if(this.yPos > Player.yPos){
+					this.yPos -= this.speed
+				}else if(this.yPos < Player.yPos){
+					this.yPos += this.speed
+				}
+				if(this.xPos > Player.xPos){
+					this.xPos -= this.speed
+				}else if(this.xPos < Player.xPos){
+					this.xPos += this.speed
+				}	
+			}
+			if(this.phaseTimer == 0){
+				this.phase = "shell"
+				this.phaseTimer = 200
+			}
+		}else if(this.phase == "spin"){
+			this.damage = 10
+			if(this.yPos - turtleSize < WALLSIZE){
+				if(this.direction == "upLeft"){
+					this.direction = "downLeft"
+				}else if(this.direction == "upRight"){
+					this.direction = "downRight"
+				}
+			}else if(this.yPos + turtleSize > HEIGHT - WALLSIZE){
+				if(this.direction == "downLeft"){
+					this.direction = "upLeft"
+				}else if(this.direction == "downRight"){
+					this.direction = "upRight"
+				}
+			}else if(this.xPos - turtleSize < WALLSIZE){
+				if(this.direction == "upLeft"){
+					this.direction = "upRight"
+				}else if(this.direction == "downLeft"){
+					this.direction = "downRight"
+				}
+			}else if(this.xPos + turtleSize > WIDTH - WALLSIZE){
+				if(this.direction == "upRight"){
+					this.direction = "upLeft"
+				}else if(this.direction == "downRight"){
+					this.direction = "downLeft"
+				}
+			}
+			if(this.direction == "upLeft"){
+				this.xPos -= this.speed
+				this.yPos -= this.speed
+			}else if(this.direction == "upRight"){
+				this.xPos += this.speed
+				this.yPos -= this.speed
+			}else if(this.direction == "downLeft"){
+				this.xPos -= this.speed
+				this.yPos += this.speed
+			}else{
+				this.xPos += this.speed
+				this.yPos += this.speed
+			}
+			if(this.phaseTimer == 0){
+				this.phaseTimer = 350
+				this.speed = 1
+				this.phase = "normal"
+			}
+		}else {
+			if(this.phaseTimer == 0){
+				this.phase = "spin"
+				this.phaseTimer = 350
+				random = Math.ceil(Math.random()*4)
+				if(random == 1){
+					this.direction = "upLeft"
+				}else if(random == 2){
+					this.direction = "upRight"
+				}else if(random == 3){
+					this.direction = "downRight"
+				}else {
+					this.direction = "downLeft"
+				}
+				this.speed = 7
+			}
+		}
+		if(this.phaseTimer != 0){
+			this.phaseTimer--
+		}
+	}
+}
+class TurtleySr{
+	constructor(bigTurtleX,bigTurtleY,bigTurtleHealth,bigTurtlePhase,bigTurtlePhaseTimer,bigTurtleSpeed,bigTurtleDamage,bigTurtleDirection){
+		this.xPos = bigTurtleX
+		this.yPos = bigTurtleY
+		this.health = bigTurtleHealth
+		this.phase = bigTurtlePhase
+		this.phaseTimer = bigTurtlePhaseTimer
+		this.speed = bigTurtleSpeed
+		this.damage = bigTurtleDamage
+		this.direction = bigTurtleDirection
+	}
+	moveBigTurtle(){
+		if(this.phase == "normal"){
+			this.damage = 5
+			if(this.phaseTimer > 200){
+				if(this.xPos >= Player.xPos - bigTurtleSize && this.xPos <= Player.xPos + bigTurtleSize){
+					if(this.yPos < Player.yPos){
+						this.yPos -= this.speed
+					}else if(this.yPos > Player.yPos){
+						this.yPos += this.speed
+					}
+				}else if(this.yPos >= Player.yPos - bigTurtleSize && this.yPos <= Player.yPos + bigTurtleSize){
+					if(this.xPos < Player.xPos){
+						this.xPos -= this.speed
+					}else if(this.xPos > Player.xPos){
+						this.xPos += this.speed
+					}
+				}else {
+					if(this.yPos < Player.yPos){
+						this.yPos -= this.speed
+					}else if(this.yPos > Player.yPos){
+						this.yPos += this.speed
+					}
+					if(this.xPos < Player.xPos){
+						this.xPos -= this.speed
+					}else if(this.xPos > Player.xPos){
+						this.xPos += this.speed
+					}	
+				}
+			}else{
+				if(this.xPos >= Player.xPos - bigTurtleSize && this.xPos <= Player.xPos + bigTurtleSize){
+					if(this.yPos > Player.yPos){
+						this.yPos -= this.speed
+					}else if(this.yPos < Player.yPos){
+						this.yPos += this.speed
+					}
+				}else if(this.yPos >= Player.yPos - bigTurtleSize && this.yPos <= Player.yPos + bigTurtleSize){
+					if(this.xPos > Player.xPos){
+						this.xPos -= this.speed
+					}else if(this.xPos < Player.xPos){
+						this.xPos += this.speed
+					}
+				}else {
+					if(this.yPos > Player.yPos){
+						this.yPos -= this.speed
+					}else if(this.yPos < Player.yPos){
+						this.yPos += this.speed
+					}
+					if(this.xPos > Player.xPos){
+						this.xPos -= this.speed
+					}else if(this.xPos < Player.xPos){
+						this.xPos += this.speed
+					}	
+				}
+			}
+			if(this.phaseTimer == 0){
+				this.phase = "shell"
+				this.phaseTimer = 50
+				textArray.push(new PopUpText(this.xPos,this.yPos,"Ugh, my back is sore. Children, deal with this hooligan!","white","bold 20px Comic Sans MS",40))
+				random = Math.ceil(Math.random() * 4) + 3
+				while(count < random){
+					turtleArray.push(new TurtleyJr(Math.floor(Math.random() * 800)+200,Math.floor(Math.random() * 500)+200,20+(Math.floor(roomNum/5)*5),"normal",350+Math.floor(Math.random() * 100),1,5,"upLeft"))
+					count++
+				}
+			}
+		}else if(this.phase == "spin"){
+			this.damage = 12
+			if(this.yPos - bigTurtleSize < WALLSIZE){
+				if(this.direction == "upLeft"){
+					this.direction = "downLeft"
+				}else if(this.direction == "upRight"){
+					this.direction = "downRight"
+				}
+			}else if(this.yPos + bigTurtleSize > HEIGHT - WALLSIZE){
+				if(this.direction == "downLeft"){
+					this.direction = "upLeft"
+				}else if(this.direction == "downRight"){
+					this.direction = "upRight"
+				}
+			}else if(this.xPos - bigTurtleSize < WALLSIZE){
+				if(this.direction == "upLeft"){
+					this.direction = "upRight"
+				}else if(this.direction == "downLeft"){
+					this.direction = "downRight"
+				}
+			}else if(this.xPos + bigTurtleSize > WIDTH - WALLSIZE){
+				if(this.direction == "upRight"){
+					this.direction = "upLeft"
+				}else if(this.direction == "downRight"){
+					this.direction = "downLeft"
+				}
+			}
+			if(this.direction == "upLeft"){
+				this.xPos -= this.speed
+				this.yPos -= this.speed
+			}else if(this.direction == "upRight"){
+				this.xPos += this.speed
+				this.yPos -= this.speed
+			}else if(this.direction == "downLeft"){
+				this.xPos -= this.speed
+				this.yPos += this.speed
+			}else{
+				this.xPos += this.speed
+				this.yPos += this.speed
+			}
+			if(this.phaseTimer == 0){
+				this.phaseTimer = 300
+				this.speed = 1
+				this.phase = "normal"
+				textArray.push(new PopUpText(this.xPos,this.yPos,"All that spinning made me dizzy...","white","bold 20px Comic Sans MS",40))
+			}
+		}else {
+			if(turtleArray.length != 0){
+				this.phaseTimer = 50
+			}
+			if(this.phaseTimer == 0){
+				this.phase = "spin"
+				this.phaseTimer = 350
+				random = Math.ceil(Math.random()*4)
+				if(random == 1){
+					this.direction = "upLeft"
+				}else if(random == 2){
+					this.direction = "upRight"
+				}else if(random == 3){
+					this.direction = "downRight"
+				}else {
+					this.direction = "downLeft"
+				}
+				this.speed = 5
+				textArray.push(new PopUpText(this.xPos,this.yPos,"Kids these days can't get anything done!","white","bold 20px Comic Sans MS",40))
+			}
+		}
+		if(this.phaseTimer != 0){
+			this.phaseTimer--
+		}
+	}
+}
 function drawMonsters(){
 	count = 0
 	while(count < biteyArray.length){
@@ -1212,27 +1721,74 @@ function drawMonsters(){
 	}
 	count = 0
 	while(count < skeletonArray.length){
-		ctx.drawImage(skeletonImage,skeletonArray[count].xPos - 20,skeletonArray[count].yPos - 20)
+		ctx.drawImage(skeletonImage,skeletonArray[count].xPos - 15,skeletonArray[count].yPos - 15)
 		count++
 	}
 	count = 0
 	while(count < skeletonProjArray.length){
-		ctx.fillStyle = "#808080"
+		ctx.drawImage(skeletonProjImage,skeletonProjArray[count].xPos-skeletonProjSize,skeletonProjArray[count].yPos-skeletonProjSize)
+		count++
+	}
+	count = 0
+	while(count < bossProjArray.length){
+		ctx.drawImage(bossProjImage,bossProjArray[count].xPos-bossProjSize,bossProjArray[count].yPos-bossProjSize)
+		count++
+	}
+	if(bossArray.length != 0){
+		ctx.fillStyle = "#660000"
 		ctx.beginPath()
-		ctx.arc(skeletonProjArray[count].xPos,skeletonProjArray[count].yPos, skeletonProjSize, 0, 2*Math.PI)
+		ctx.arc(bossArray[0].xPos,bossArray[0].yPos, bossSize, 0, 2*Math.PI)
 		ctx.fill()
+	}
+	if(bigTurtleArray.length != 0){
+		if(bigTurtleArray[0].phase == "normal"){
+			if(bigTurtleArray[0].xPos > Player.xPos){
+				ctx.drawImage(turtleySrLeftImage,bigTurtleArray[0].xPos-bigTurtleSize,bigTurtleArray[0].yPos-bigTurtleSize)
+			}else {
+				ctx.drawImage(turtleySrImage,bigTurtleArray[0].xPos-bigTurtleSize,bigTurtleArray[0].yPos-bigTurtleSize)
+			}
+		}else if(bigTurtleArray[0].phase == "spin"){
+			if(Math.ceil(bigTurtleArray[0].phaseTimer/5) % 2 == 0){
+				ctx.drawImage(turtleySrSpin1Image,bigTurtleArray[0].xPos-bigTurtleSize,bigTurtleArray[0].yPos-bigTurtleSize)
+			}else{
+				ctx.drawImage(turtleySrSpin2Image,bigTurtleArray[0].xPos-bigTurtleSize,bigTurtleArray[0].yPos-bigTurtleSize)
+			}
+		}else{
+			ctx.drawImage(turtleySrShellImage,bigTurtleArray[0].xPos-bigTurtleSize,bigTurtleArray[0].yPos-bigTurtleSize)
+		}
+	}
+	count = 0
+	while(count < turtleArray.length){
+		if(turtleArray[count].phase == "normal"){
+			ctx.drawImage(turtleImage,turtleArray[count].xPos-turtleSize,turtleArray[count].yPos-turtleSize)
+		}else if(turtleArray[count].phase == "spin"){
+			if(Math.ceil(turtleArray[count].phaseTimer/5) % 4 == 0){
+				ctx.drawImage(turtleSpin1Image,turtleArray[count].xPos-turtleSize,turtleArray[count].yPos-turtleSize)
+			}else if((Math.ceil(turtleArray[count].phaseTimer/5)-2) % 4 == 0){
+				ctx.drawImage(turtleSpin2Image,turtleArray[count].xPos-turtleSize,turtleArray[count].yPos-turtleSize)
+			}else if((Math.ceil(turtleArray[count].phaseTimer/5)-3) % 4 == 0){
+				ctx.drawImage(turtleSpin3Image,turtleArray[count].xPos-turtleSize,turtleArray[count].yPos-turtleSize)
+			}else {
+				ctx.drawImage(turtleSpin4Image,turtleArray[count].xPos-turtleSize,turtleArray[count].yPos-turtleSize)
+			}
+		}else{
+			ctx.drawImage(turtleShellImage,turtleArray[count].xPos-turtleSize,turtleArray[count].yPos-turtleSize)
+		}
 		count++
 	}
 }
+//collsion checks for the monsters
 function checkMonsters(){
 	count = 0
 	while(count < biteyArray.length){
-		xDist = biteyArray[count].xPos -  Player.xPos
-		yDist = biteyArray[count].yPos -  Player.yPos
-		trueDist = Math.sqrt(xDist*xDist + yDist*yDist)
 		if(collisionCheck(biteyArray[count].xPos,biteyArray[count].yPos,biteyArray[count].size,Player.xPos,Player.yPos,PLAYERSIZE) && iFrames == 0){
 			Player.health -= biteyArray[count].damage
 			iFrames = 30
+			if(biteyArray[count].size > 30){
+				lastDamageSource = "Big Bitey"
+			}else{
+				lastDamageSource = "Bitey"
+			}
 		}
 		count++
 	}
@@ -1240,9 +1796,6 @@ function checkMonsters(){
 	while(count < biteyArray.length){
 		count2 = 0
 		while(count2 < magicBlastArray.length){
-			xDist = biteyArray[count].xPos -  magicBlastArray[count2].xPos
-			yDist = biteyArray[count].yPos -  magicBlastArray[count2].yPos
-			trueDist = Math.sqrt(xDist*xDist + yDist*yDist)
 			if(collisionCheck(biteyArray[count].xPos,biteyArray[count].yPos,biteyArray[count].size,magicBlastArray[count2].xPos,magicBlastArray[count2].yPos,magicBlastSize)){
 				biteyArray[count].health -= magicBlastDamage
 				magicBlastArray.splice(count2, 1)
@@ -1275,11 +1828,13 @@ function checkMonsters(){
 	count = 0
 	while(count < biteyArray.length){
 		if(biteyArray[count].health < 1){
+			if(Math.ceil(Math.random() * 3) == 2){
+				random = Math.floor(Math.random() * 5) + 5
+				coinCount += random
+				textArray.push(new PopUpText(biteyArray[count].xPos,biteyArray[count].yPos,"+"+random+" coins","gold","15px Comic Sans MS",20))
+			}
 			biteyArray.splice(count,1)
 			enemyKills++
-			if(Math.ceil(Math.random() * 3) == 2){
-				coinCount += Math.floor(Math.random() * 5) + 5
-			}
 		}
 		count++
 	}
@@ -1290,6 +1845,7 @@ function checkMonsters2(){
 		if(collisionCheck(Player.xPos,Player.yPos,PLAYERSIZE,skeletonArray[count].xPos,skeletonArray[count].yPos,skeletonSize) && iFrames == 0){
 			Player.health -= skeletonContactDamage
 			iFrames = 30
+			lastDamageSource = "Skeleton"
 		}
 		count++
 	}
@@ -1328,11 +1884,13 @@ function checkMonsters2(){
 	count = 0
 	while(count < skeletonArray.length){
 		if(skeletonArray[count].health < 1){
+			if(Math.ceil(Math.random() * 3) == 2){
+				random = Math.floor(Math.random() * 5) + 5
+				coinCount += random
+				textArray.push(new PopUpText(skeletonArray[count].xPos,skeletonArray[count].yPos,"+"+random+" coins","gold","15px Comic Sans MS",20))
+			}
 			skeletonArray.splice(count,1)
 			enemyKills++
-			if(Math.ceil(Math.random() * 3) == 2){
-				coinCount += Math.floor(Math.random() * 5) + 5
-			}
 		}
 		count++
 	}
@@ -1351,14 +1909,129 @@ function checkSkeletonProj(){
 			Player.health -= skeletonProjDamage
 			skeletonProjArray.splice(count, 1)
 			iFrames = 30
+			lastDamageSource = "Skeleton"
 		}
 		count++
 	}
 }
+function checkTurtles(){
+	count = 0
+	while(count < turtleArray.length){
+		if(collisionCheck(turtleArray[count].xPos,turtleArray[count].yPos,turtleSize,Player.xPos,Player.yPos,PLAYERSIZE) && iFrames == 0){
+			Player.health -= turtleArray[count].damage
+			iFrames = 30
+			lastDamageSource = "Turtley Jr."
+		}
+		count++
+	}
+	count = 0
+	while(count < turtleArray.length){
+		count2 = 0
+		while(count2 < magicBlastArray.length){
+			if(collisionCheck(turtleArray[count].xPos,turtleArray[count].yPos,turtleSize,magicBlastArray[count2].xPos,magicBlastArray[count2].yPos,magicBlastSize)){
+				if(turtleArray[count].phase == "normal"){
+					turtleArray[count].health -= magicBlastDamage
+				}else {
+					textArray.push(new PopUpText(turtleArray[count].xPos,turtleArray[count].yPos,"Blocked!","white","15px Comic Sans MS",15))
+				}
+				magicBlastArray.splice(count2, 1)
+			}
+			count2++
+		}
+		count++
+	}
+	count = 0
+	while(count < turtleArray.length){
+		count2 = 0
+		while(count2 < fireballArray.length){
+			if(collisionCheck(turtleArray[count].xPos,turtleArray[count].yPos,turtleSize,fireballArray[count2].xPos,fireballArray[count2].yPos,fireballArray[count2].size)){
+				if(fireballArray[count2].exploded == "true" && fireballArray[count2].iFrames == 0){
+					fireballArray[count2].iFrames = 15
+					if(turtleArray[count].phase == "normal"){
+						turtleArray[count].health -= fireballDamage
+					}else {
+						textArray.push(new PopUpText(turtleArray[count].xPos,turtleArray[count].yPos,"Blocked!","white","15px Comic Sans MS",15))
+					}
+				}else {
+					fireballArray[count2].exploded = "true"
+					if(fireballArray[count2].timer == 0){
+						fireballArray[count2].timer = 25
+					}
+					fireballArray[count2].size = fireballExplosionSize
+				}
+			}
+			count2++
+		}
+		count++
+	}
+	count = 0
+	while(count < turtleArray.length){
+		if(turtleArray[count].health < 1){
+			if(Math.ceil(Math.random() * 3) == 2){
+				random = Math.floor(Math.random() * 5) + 5
+				coinCount += random
+				textArray.push(new PopUpText(turtleArray[count].xPos,turtleArray[count].yPos,"+"+random+" coins","gold","15px Comic Sans MS",20))
+			}
+			turtleArray.splice(count,1)
+			enemyKills++
+		}
+		count++
+	}	
+}
+function checkBigTurtle(){
+	if(bigTurtleArray.length != 0){
+		if(collisionCheck(bigTurtleArray[0].xPos,bigTurtleArray[0].yPos,bigTurtleSize,Player.xPos,Player.yPos,PLAYERSIZE) && iFrames == 0){
+			Player.health -= bigTurtleArray[0].damage
+			iFrames = 30
+			lastDamageSource = "Turtley Sr."
+		}
+		count = 0
+		while(count < magicBlastArray.length){
+			if(collisionCheck(bigTurtleArray[0].xPos,bigTurtleArray[0].yPos,bigTurtleSize,magicBlastArray[count].xPos,magicBlastArray[count].yPos,magicBlastSize)){
+				if(bigTurtleArray[0].phase == "normal"){
+					bigTurtleArray[0].health -= magicBlastDamage
+				}else {
+					textArray.push(new PopUpText(bigTurtleArray[0].xPos,bigTurtleArray[0].yPos,"Blocked!","white","15px Comic Sans MS",15))
+				}
+				magicBlastArray.splice(count,1)
+			}
+			count++
+		}
+		count = 0
+		while(count < fireballArray.length){
+			if(collisionCheck(bigTurtleArray[0].xPos,bigTurtleArray[0].yPos,bigTurtleSize,fireballArray[count].xPos,fireballArray[count].yPos,fireballArray[count].size)){
+				if(fireballArray[count].exploded == "true" && fireballArray[count].iFrames == 0){
+					fireballArray[count].iFrames = 15
+					if(bigTurtleArray[0].phase == "normal"){
+						bigTurtleArray[0].health -= fireballDamage
+					}else {
+						textArray.push(new PopUpText(bigTurtleArray[0].xPos,bigTurtleArray[0].yPos,"Blocked!","white","15px Comic Sans MS",15))
+					}
+				}else {
+					fireballArray[count].exploded = "true"
+					if(fireballArray[count].timer == 0){
+						fireballArray[count].timer = 25
+					}
+					fireballArray[count].size = fireballExplosionSize
+				}
+			}
+			count++
+		}
+		if(bigTurtleArray[0].health < 1){
+			enemyKills++
+			random = Math.floor(Math.random() * 10) + 25
+			coinCount += random
+			textArray.push(new PopUpText(bigTurtleArray[0].xPos,bigTurtleArray[0].yPos,"+"+random+" coins","gold","15px Comic Sans MS",20))
+			bigTurtleArray.splice(0,1)
+		}
+	}
+}
+//boss stuff
 class BossMonster{
-	constructor(bossX,bossY,bossProjCooldown,bossAttackPhase,bossTargetX,bossTargetY,bossPhaseTimer,bossCycle ){
+	constructor(bossX,bossY,bossHealth,bossProjCooldown,bossAttackPhase,bossTargetX,bossTargetY,bossPhaseTimer,bossCycle ){
 		this.xPos = bossX
 		this.yPos = bossY
+		this.health = bossHealth
 		this.cooldown = bossProjCooldown
 		//boss has chase phase where he follows you and shoot you with 3 projectiles at once
 		//then there is bullet pain phase where he goes to a spot in the room and telegraphs an attack and shoots like tons of projectiles in 8 directions
@@ -1369,21 +2042,15 @@ class BossMonster{
 		this.cycle = bossCycle
 	}
 	moveBoss(){
-		if(this.phase != "chase" && this.cycle == 0){
-			this.phase = "chase"
-			this.phaseTimer = 750
-		}
 		if(this.phase == "chase"){
 			this.targetX = Player.xPos
 			this.targetY = Player.yPos
 			if(this.phaseTimer == 0){
-				this.phase = "bullet"
+				this.phase = "bullets"
 				this.cycle = 0
-			}else{
-				this.phaseTimer--
 			}
 		}else {
-			if(this.phase == "bullet" && this.phaseTimer == 0){
+			if(this.phase == "bullets" && this.phaseTimer == 0){
 				this.phase = "change"
 				random = Math.ceil(Math.random()*9)
 				if(random == 1){
@@ -1414,26 +2081,20 @@ class BossMonster{
 					this.targetX = 800
 					this.targetY = 650
 				}
+				this.cycle++
+				if(this.cycle == 5){
+					this.phase = "chase"
+					this.phaseTimer = 500
+				}
 			}
 			if(this.xPos == this.targetX && this.yPos == this.targetY && this.phase == "change"){
 				this.phase = "aim"
-				this.phaseTimer = 50
-				
+				this.phaseTimer = 25
 			}
-			/*
-			
-		
 			if(this.phase == "aim" && this.phaseTimer == 0){
 				this.phase = "bullets"
 				this.phaseTimer = 100
-				if(this.cycle == 5){
-
-				}
 			}
-			if(this.phase == "bullets"){
-
-			}
-			*/
 		}
 		if(this.xPos >= this.targetX && this.xPos <= this.targetX){
 			if(this.yPos > this.targetY){
@@ -1459,6 +2120,9 @@ class BossMonster{
 				this.xPos += bossSpeed
 			}
 		}
+		if(this.phaseTimer != 0){
+			this.phaseTimer--
+		}
 	}
 	shootBossProj(){
 		if(this.phase == "chase"){
@@ -1466,62 +2130,46 @@ class BossMonster{
 				if(this.xPos < Player.xPos + PLAYERSIZE && this.xPos > Player.xPos - PLAYERSIZE){
 					if(this.yPos > Player.yPos){
 						//up
-						bossProjArray.push(new BossProj(this.xPos,this,yPos,"up",5))
-						bossProjArray.push(new BossProj(this.xPos,this,yPos,"upLeft",5))
-						bossProjArray.push(new BossProj(this.xPos,this,yPos,"upRight",5))
+						bossProjArray.push(new BossProj(this.xPos,this.yPos,"up",5))
 					}else {
 						//down
-						bossProjArray.push(new BossProj(this.xPos,this,yPos,"down",5))
-						bossProjArray.push(new BossProj(this.xPos,this,yPos,"downLeft",5))
-						bossProjArray.push(new BossProj(this.xPos,this,yPos,"downRight",5))
+						bossProjArray.push(new BossProj(this.xPos,this.yPos,"down",5))
 					}
 				}else if(this.yPos < Player.yPos + PLAYERSIZE && this.yPos > Player.yPos - PLAYERSIZE){
-					if(this.xPos > Player.xPos){
+					if(this.xPos < Player.xPos){
 						//right
 						bossProjArray.push(new BossProj(this.xPos,this.yPos,"right",5))
-						bossProjArray.push(new BossProj(this.xPos,this.yPos,"upRight",5))
-						bossProjArray.push(new BossProj(this.xPos,this.yPos,"downRight",5))
 					}else {
 						//left
 						bossProjArray.push(new BossProj(this.xPos,this.yPos,"left",5))
-						bossProjArray.push(new BossProj(this.xPos,this.yPos,"upLeft",5))
-						bossProjArray.push(new BossProj(this.xPos,this.yPos,"downLeft",5))
 					}
 				}else {
-					if(this.xPos > Player.xPos){
+					if(this.xPos < Player.xPos){
 						if(this.yPos > Player.yPos){
 							//up and right
 							bossProjArray.push(new BossProj(this.xPos,this.yPos,"upRight",5))
-							bossProjArray.push(new BossProj(this.xPos,this,yPos,"up",5))
-							bossProjArray.push(new BossProj(this.xPos,this.yPos,"right",5))
 						}else {
 							//down and right
 							bossProjArray.push(new BossProj(this.xPos,this.yPos,"downRight",5))
-							bossProjArray.push(new BossProj(this.xPos,this,yPos,"down",5))
-							bossProjArray.push(new BossProj(this.xPos,this.yPos,"right",5))
 						}
 					}else{
 						if(this.yPos > Player.yPos){
 							//up and left
 							bossProjArray.push(new BossProj(this.xPos,this.yPos,"upLeft",5))
-							bossProjArray.push(new BossProj(this.xPos,this,yPos,"up",5))
-							bossProjArray.push(new BossProj(this.xPos,this.yPos,"left",5))
 						}else {
 							//down and left
 							bossProjArray.push(new BossProj(this.xPos,this.yPos,"downLeft",5))
-							bossProjArray.push(new BossProj(this.xPos,this,yPos,"down",5))
-							bossProjArray.push(new BossProj(this.xPos,this.yPos,"left",5))
 						}
 					}
 				}
-				this.cooldown = 20
+				this.cooldown = 10
 			}else {
 				this.cooldown--
 			}
 		}else {
 			if(this.phase == "bullets"){
 				if(this.cooldown == 0){
-					bossProjArray.push(new BossProj(this.xPos,this,yPos,"up",8))
+					bossProjArray.push(new BossProj(this.xPos,this.yPos,"up",8))
 					bossProjArray.push(new BossProj(this.xPos,this.yPos,"upLeft",8))
 					bossProjArray.push(new BossProj(this.xPos,this.yPos,"left",8))
 					bossProjArray.push(new BossProj(this.xPos,this.yPos,"downLeft",8))
@@ -1533,7 +2181,7 @@ class BossMonster{
 				}else {
 					this.cooldown-- 
 				}
-			}else {
+			}else if(this.phase == "aim"){
 				//aiming phase
 				ctx.strokeStyle = "red"
 				ctx.beginPath()
@@ -1561,6 +2209,7 @@ class BossMonster{
 				ctx.moveTo(this.xPos,this.yPos)
 				//upright
 				ctx.lineTo(this.xPos+1000,this.yPos-1000)
+				ctx.stroke()
 			}
 		}
 	}
@@ -1571,6 +2220,84 @@ class BossProj{
 		this.yPos = bossProjY
 		this.direction = bossProjDirection
 		this.speed = bossProjSpeed
+	}
+	moveBossProj(){
+		if(this.direction == "up"){
+			this.yPos -= this.speed
+		}else if(this.direction == "upLeft"){
+			this.xPos -= this.speed
+			this.yPos -= this.speed
+		}else if(this.direction == "left"){
+			this.xPos -= this.speed
+		}else if(this.direction == "downLeft"){
+			this.xPos -= this.speed
+			this.yPos += this.speed
+		}else if(this.direction == "down"){
+			this.yPos += this.speed
+		}else if(this.direction == "downRight"){
+			this.xPos += this.speed
+			this.yPos += this.speed
+		}else if(this.direction == "right"){
+			this.xPos += this.speed
+		}else if(this.direction == "upRight"){
+			this.xPos += this.speed
+			this.yPos -= this.speed
+		}
+	}
+}
+function checkBoss(){
+	if(collisionCheck(bossArray[0].xPos,bossArray[0].yPos,bossSize,Player.xPos,Player.yPos,PLAYERSIZE) && iFrames == 0){
+		Player.health -= bossContactDamage
+		iFrames = 30
+		lastDamageSource = "Witch King"
+	}
+	count = 0
+	while(count < magicBlastArray.length){
+		if(collisionCheck(bossArray[0].xPos,bossArray[0].yPos,bossSize,magicBlastArray[count].xPos,magicBlastArray[count].yPos,magicBlastSize)){
+			bossArray[0].health -= magicBlastDamage
+			magicBlastArray.splice(count,1)
+		}
+		count++
+	}
+	count = 0
+	while(count < fireballArray.length){
+		if(collisionCheck(bossArray[0].xPos,bossArray[0].yPos,bossSize,fireballArray[count].xPos,fireballArray[count].yPos,fireballArray[count].size)){
+			if(fireballArray[count].exploded == "true" && fireballArray[count].iFrames == 0){
+				fireballArray[count].iFrames = 15
+				bossArray[0].health -= fireballDamage
+			}else {
+				fireballArray[count].exploded = "true"
+				if(fireballArray[count].timer == 0){
+					fireballArray[count].timer = 25
+				}
+				fireballArray[count].size = fireballExplosionSize
+			}
+		}
+		count++
+	}
+	count = 0
+	while(count < bossProjArray.length){
+		if(bossProjArray[count].xPos + bossProjSize > WIDTH - WALLSIZE || bossProjArray[count].yPos + bossProjSize > HEIGHT - WALLSIZE || bossProjArray[count].xPos - bossProjSize < 0 + WALLSIZE || bossProjArray[count].yPos - bossProjSize < 0 + WALLSIZE){
+			bossProjArray.splice(count,1)
+		}
+		count++
+	}
+	count = 0
+	while(count < bossProjArray.length){
+		if(collisionCheck(Player.xPos,Player.yPos,PLAYERSIZE,bossProjArray[count].xPos,bossProjArray[count].yPos,bossProjSize)){
+			Player.health -= bossProjDamage
+			bossProjArray.splice(count, 1)
+			iFrames = 30
+			lastDamageSource = "Witch King"
+		}
+		count++
+	}
+	if(bossArray[0].health < 1){
+		enemyKills++
+		random = Math.floor(Math.random() * 10) + 15
+		coinCount += random
+		textArray.push(new PopUpText(bossArray[0].xPos,bossArray[0].yPos,"+"+random+" coins","gold","15px Comic Sans MS",20))
+		bossArray.splice(0,1)
 	}
 }
 //spells
@@ -1585,6 +2312,7 @@ class MagicBlastProjectile{
 		this.direction = magicBlastDirection
 	}
 	moveMagicBlast(){
+		
 		if(this.direction == "up"){
 			this.yPos -= magicBlastSpeed
 		}else if(this.direction == "upLeft"){
@@ -1611,7 +2339,7 @@ class MagicBlastProjectile{
 //
 function fireball(){
 	fireballTimer = fireballCooldownTime
-	fireballArray.push(new FireballProjectile(Player.xPos,Player.yPos, facingDirection, "false", 4, 60, 0))
+	fireballArray.push(new FireballProjectile(Player.xPos,Player.yPos, facingDirection, "false", 6, 60, 0))
 }
 class FireballProjectile{
 	constructor(fireballX, fireballY, fireballDirection, fireballExploded, fireballSize, fireballTimer, fireballIFrames){
@@ -1674,10 +2402,11 @@ function drawSpells(){
 	}
 	count = 0
 	while(count < fireballArray.length){
-		ctx.fillStyle = "#FF8C00"
-		ctx.beginPath()
-		ctx.arc(fireballArray[count].xPos, fireballArray[count].yPos, fireballArray[count].size, 0,2*Math.PI)
-		ctx.fill()
+		if(fireballArray[count].exploded == "true"){
+			ctx.drawImage(fireballBoomImage,fireballArray[count].xPos-51,fireballArray[count].yPos-51)
+		}else{
+			ctx.drawImage(fireballImage,fireballArray[count].xPos-6,fireballArray[count].yPos-6)
+		}
 		count++
 	}
 
@@ -1712,11 +2441,12 @@ function checkSpells(){
 	}
 }
 function healSpell(){
-	if(numMonsters != 0){
+	if(numMonsters != 0 && roomHeals < roomHealCap){
 		healthCurrent = Player.health
 		killsCurrent = enemyKills
 		healTimer = 750
 		attemptingHeal = "true"
+		roomHeals++
 	}
 }
 function healCheck(){
@@ -1748,5 +2478,31 @@ function collisionCheck(x1,y1,r1,x2,y2,r2){
 		return(true)
 	}else {
 		return(false)
+	}
+}
+class PopUpText{
+	constructor(textX,textY,textString,textColour,textFont,textTime){
+		this.xPos = textX
+		this.yPos = textY
+		this.text = textString
+		this.colour = textColour
+		this.font = textFont
+		this.time = textTime
+	}
+}
+function drawPopUpText(){
+	count = 0
+	while(count < textArray.length){
+		textArray[count].yPos -= 3
+		ctx.textAlign = "center"
+		ctx.font = textArray[count].font
+		ctx.fillStyle = textArray[count].colour
+		ctx.fillText(textArray[count].text,textArray[count].xPos,textArray[count].yPos)
+		if(textArray[count].time == 0){
+			textArray.splice(count,1)
+		}else{
+			textArray[count].time--
+		}
+		count++
 	}
 }
