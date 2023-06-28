@@ -1,19 +1,13 @@
 /**
-* title: pewpew game (placeholder)
+* title: mystic mausoleum
 * date: 14/04/23
 * author: me
-* version: 7.2
+* version: 10.2
 vvv IMPORTANT: 
-all music and sprites are made by me unless specified :]
+all sprites are made by me unless specified otherwise :]
 THINGS:
 weird glitch that gives everything like trails but i like it and im not gonna fix it because it looks cool
-make image for restart button
-player sprite is good idea too
-sprite for explosion projectile
-sprite for skeleton projectile
-sprite for heal aura thingy
-sprite for rewards and shop items like heal potion
-boss sprite make it like evil spider or tentacle thing
+player sprite is good idea
 **/
 //constants
 const WIDTH = 1200
@@ -28,44 +22,50 @@ var upPressed = false
 var leftPressed = false
 var downPressed = false
 var rightPressed = false
+//player movement variables
 var playerSpeed = 4                
 var facingDirection
-var count = 0
 var dashTimer = 0 
-var attackSpeed = 1
 var dashSpeed = 1 //how fast you move when dashing
 var dashCooldown = 1 //time between dashes
 var mouseX = 0
 var mouseY = 0
+//magic blast stuff
 var magicBlastTimer = 0
 var magicBlastSize = 5
 var magicBlastSpeed = 5
 var magicBlastDamage = 5
 var magicBlastCooldownTime = 10
+//fireball stuff
 var fireballTimer = 0
 var fireballCooldownTime = 1
 var fireballSpeed = 7
 var fireballExplosionSize = 51
 var fireballDamage = 5
 var fireballUnlocked = "false"
+//misc
+var attackSpeed = 1
 var numProjectiles = 0
 var maxProjectiles = 500
 var debugInfoOn = 0
 var roomNum = 1
+//math stuff
 var count = 0
 var count2 = 0
 var spawnedCount = 0
 var xDist = 0
 var yDist = 0
 var trueDist = 0
+var random
+//more misc
 var iFrames = 0
 var roomReward
 var doorEntered = "down"
 var loadingScreen = 0
 var rewardSize = 36
 var rewardPreviewSize = 30
-var dead = "false"
-var random
+var dead = "true"
+//some enemy kinda stuff
 var coinCount = 0
 var enemyCap = 5
 var minEnemies = 3
@@ -73,15 +73,17 @@ var spawnAttemptMin
 var enemyKills = 0
 var killsCurrent
 var healthCurrent
+//heal spell stuff
 var healTimer = 0
 var healAmount = 15
 var healUnlocked = "false"
 var attemptingHeal = "false"
 var roomHealCap = 1
 var roomHeals = 0
+//misc
 var textArray = []
 var lastDamageSource 
-
+var gameStarted = "false"
 //arrays
 var possibleRewards = ["health","spell","player","miniboss","boss"]
 var shopItemArray = []
@@ -91,6 +93,7 @@ var magicBlastArray = []
 var fireballArray = []
 //enemiesd
 var biteyArray = []
+//skeleton stuff
 var skeletonArray = []
 var skeletonSize = 15
 var skeletonSpeed = 1
@@ -100,6 +103,7 @@ var skeletonProjArray = []
 var skeletonProjSpeed = 5
 var skeletonProjSize = 6
 var skeletonCooldownTimer = 100
+//boss stuff
 var bossSize = 60
 var bossSpeed = 4
 var bossContactDamage = 10
@@ -107,6 +111,7 @@ var bossProjDamage = 7
 var bossArray = []
 var bossProjArray = []
 var bossProjSize = 9
+//turtle things
 var turtleArray = []
 var turtleSize = 24
 var turtleySrEncountered = "true"
@@ -215,12 +220,14 @@ var killCountImage = new Image
 killCountImage.src = "killCount.png"
 var restartButtonImage = new Image
 restartButtonImage.src = "restartButton.png"
+var titleImage = new Image
+titleImage.src = "title.png"
 //canvas setup
 window.onload=startCanvas
 function startCanvas(){
 	ctx=document.getElementById("myCanvas").getContext("2d")
 	timer = setInterval(updateCanvas, 20)
-	gameStart()
+	gameStarted = "false"
 }
 function gameStart(){
 	//resets the game 
@@ -401,32 +408,42 @@ function updateCanvas(){
 }
 //
 function roomStateCheck(){
+	//heres the bad annoying code for the room state stuff
 	if(Reward.type == "shop" && Reward.state != "2"){
+		//if the room is a shop it skips all the complicated stuff and just lets you through straight away
 		nextRoomsReward()
 		Reward.state = "2"
 	}
 	if(numMonsters == "0"){
+		//when there are no monsters this stuff happens
 		if(Reward.state == "0"){
+			//state becomes one, reward variety is made
 			Reward.state = "1"	
 			makeRewardVariety(Reward.type)
 		}
 		if(Reward.state == "1"){
+			//when the state is one it will draw the reward and check if you collect it
 			drawRewards()
 			xDist = Player.xPos - (Room.rewardX + rewardSize)
 			yDist = Player.yPos - (Room.rewardY + rewardSize)
 			trueDist = Math.sqrt(xDist*xDist + yDist*yDist)
+			//i forgot to convert this to the better collision check function but oh well it doenst matter
 			if(trueDist < PLAYERSIZE + rewardSize + 19){
+				//when you touch the reward it gives you the stuff from it and generates the rewards for the next rooms
 				grantReward(Reward.variety)
 				Reward.state = "2"
 				nextRoomsReward()
 			}
 		}
 		if(Reward.state == "2"){
+			//now it draws the rewards for the next rooms
 			drawNextRewards()
+			//also if its a shop room then it does the shop stuff
 			if(Reward.type == "shop"){
 				checkShopItems()
 				drawShopItems()
 			}
+			//when you go through a door it will send you to the place its meant to and then do the room resetting stuff
 			if(doorCheck() == "true"){
 				roomHeals = 0
 				roomNum++
@@ -457,6 +474,7 @@ function roomStateCheck(){
 	}
 }
 function makeRewardVariety(type){
+	//some reward types have different varieties and thats what this does
 	if(type == "health"){
 		Reward.variety = "health"
 	}
@@ -506,6 +524,7 @@ function makeRewardVariety(type){
 	}
 }
 function grantReward(variety){
+	//code that actually gives you the rewards
 	if(variety == "health"){
 		Player.maxHealth += 25
 		Player.health += 25
@@ -580,6 +599,7 @@ function grantReward(variety){
 }
 //room stuff
 class Room{
+	//room stuff that i was going to use but really didn't in the end
 	constructor(rewardXPos,rewardYPos, roomUpDoor, roomLeftDoor, roomDownDoor, roomRightDoor){
 		this.rewardX = rewardXPos
 		this.rewardY = rewardYPos
@@ -590,6 +610,7 @@ class Room{
 	}
 }
 function nextRoomsReward(){
+	//here it gets the next rewards and the way i made it stops duplicates from happening :)
 	possibleRewards = ["health","spell","player","miniboss","shop","coins"]
 	random = Math.floor(Math.random()*possibleRewards.length)
 	Room.upDoor = possibleRewards[random]
@@ -603,6 +624,7 @@ function nextRoomsReward(){
 	random = Math.floor(Math.random()*possibleRewards.length)
 	Room.rightDoor = possibleRewards[random]
 	possibleRewards.splice(random, 1)
+	//also every ten rooms is a boss >:O
 	if((roomNum + 1) % 10 == 0){
 		console.log("skkasufausf")
 		Room.upDoor = "boss"
@@ -610,6 +632,7 @@ function nextRoomsReward(){
 		Room.downDoor = "boss"
 		Room.rightDoor = "boss"
 	}
+	//this bit stops you from going through the door you entered from
 	if(doorEntered == "up"){
 		Room.upDoor = "closed"
 	}
@@ -625,6 +648,7 @@ function nextRoomsReward(){
 }
 //room reward
 class Reward{
+	//reward stuff explained earlier
 	constructor(rewardType,rewardState, rewardVariety){
 		this.type = rewardType
 		this.state = rewardState
@@ -632,6 +656,7 @@ class Reward{
 	}
 }
 function drawRewards(){
+	//draws the reward for this room, not much to say about this
 	if(Reward.state == "1"){
 		if(Reward.type == "health"){
 			ctx.drawImage(heartUpgradeImage,Room.rewardX,Room.rewardY)
@@ -651,6 +676,7 @@ function drawRewards(){
 	}
 }
 function drawNextRewards(){
+	//draws the little reward icons for the next rooms, i probably could have done this better but idk how
 	if(Room.upDoor != "closed"){
 		if(Room.upDoor == "health"){
 			ctx.drawImage(heartUpgradePreviewImage, 570, 70)
@@ -745,8 +771,9 @@ function drawNextRewards(){
 	}
 }
 function generateNewRoom(){
+	//room resetting stuff
 	shopItemArray = []
-	skeletonCooldownTime = 100
+	skeletonCooldownTime = 75
 	if(Reward.type == "miniboss"){
 		if(Math.random() * 2 > 1){
 			biteyArray.push(new Bitey(600, 450, 85 + roomNum * 2, 45, 14, 3))
@@ -775,7 +802,8 @@ function generateNewRoom(){
 		}
 	}else if(Reward.type == "boss"){
 		bossArray.push(new BossMonster(600,450,roomNum*10,50,"chase",0,0,750,0))
-	}else if(roomNum > 10 && Math.random() * 13 > 11){
+	}else if(roomNum > 10 && Math.random() * 15 > 13){
+		//after room 10 there is a roughly 1 in 8 chance for a random event to happen
 		random = Math.floor(Math.random() * 3)
 		if(random == 2){
 			textArray.push(new PopUpText(600,375,"Turtle Mayhem!","DarkGreen","35px Comic Sans MS",45))
@@ -874,6 +902,17 @@ function generateNewRoom(){
 			enemyCap = 7
 			spawnAttemptMin = 7
 		}
+		//ok time to explain the enemy spawn code this will not make much sense
+		//essentially the above code ^ checks the room number and adjusts some values. this helps to add scaling in difficulty
+		//"minEnemies" is just the minimum amount of enemies spawned each time
+		//"enemyCap" is the most that can spawn
+		//"spawnAttemptMin" is the minimum amount of times it will try to spawn an enemy
+		// the code below is very dumb but basically: while the spawned count is less than the enemy cap AND the attempt count is less than the minimum attempt count
+		// it will try to spawn an enemy. if the spawned count is still less than the min enemies it will 100% spawn one but otherwise the chance is
+		// random number 0-100 + 2 for every 5 rooms so far. if its more than 70 it will spawn an enemy
+		// once the attempt count is more than the minimum if the enemy spawn check fails it will stop trying but otherwise it can just keep spawning til it reaches the cap
+		// that might have not made sense but idk
+
 		while(spawnedCount < enemyCap && count < spawnAttemptMin){
 			if(spawnedCount < minEnemies){
 				if(turtleySrEncountered == "true"){
@@ -915,6 +954,7 @@ function generateNewRoom(){
 }
 //shop code
 function drawShopItems(){
+	//not much to say about this it just draws the shop items. if you can afford them the text is yellow but if you can't its black
 	ctx.drawImage(merchantImage,200,230)
 	ctx.font = "bold 25px Papyrus"
 	ctx.fillStyle = "white"
@@ -961,6 +1001,7 @@ function drawShopItems(){
 	}
 }
 function checkShopItems(){
+	//boring code just checks if you have A. touched the shop item and B. have enough money to buy it
 	if(collisionCheck(400,300,SHOPITEMSIZE,Player.xPos,Player.yPos,PLAYERSIZE) && coinCount >= shopItemArray[0].cost && shopItemArray[0].bought == "false"){
 		random = Math.floor(Math.random()*16) + 35
 		Player.health += random
@@ -1021,9 +1062,9 @@ class ShopItem {
 }
 //door entering stuff
 function doorCheck(){
+	//door collision code fun
 	if(Player.xPos > 500 && Player.xPos < 700 && Player.yPos - PLAYERSIZE - playerSpeed < WALLSIZE && Room.upDoor != "closed" ){
 		doorEntered = "down"
-		console.log("test")
 		return("true")
 	}else if(Player.yPos > 350 && Player.yPos < 550 && Player.xPos - PLAYERSIZE - playerSpeed < WALLSIZE && Room.leftDoor != "closed" ){
 		doorEntered = "right"
@@ -1039,6 +1080,7 @@ function doorCheck(){
 	}
 }
 function drawDoors(){
+	//draws the door sprites
 	ctx.drawImage(doorUpOpenImage,456,-6)
 	ctx.drawImage(doorLeftOpenImage,-6,306)
 	ctx.drawImage(doorDownOpenImage,456,834)
@@ -1046,6 +1088,7 @@ function drawDoors(){
 }
 //player stuff 
 class Player{
+	//basic player stats i probably could have done other player stats as part of this but i didnt because i didnt
 	constructor(playerX,playerY,playerHealth,playerMaxHealth){
 		this.xPos = playerX
 		this.yPos = playerY
@@ -1054,6 +1097,7 @@ class Player{
 	}
 }
 function drawPlayer(){
+	//if your dash is on cooldown you turn blue hmm i wonder what game that is from definitely mine and very original
 	if(dashTimer == "0"){
 		ctx.fillStyle = "#800000"
 	}else{
@@ -1063,6 +1107,7 @@ function drawPlayer(){
 	ctx.arc(Player.xPos, Player.yPos, PLAYERSIZE, 0, 2*Math.PI)
 	ctx.fill()
 	if(attemptingHeal == "true"){
+		//when the healing thingy is active you get a green circle around you
 		ctx.strokeStyle = "#00FF00"
 		ctx.beginPath()
 		ctx.arc(Player.xPos, Player.yPos, PLAYERSIZE + 3, 0, 2*Math.PI)
@@ -1070,6 +1115,7 @@ function drawPlayer(){
 	}
 }
 function youLostLmao(){
+	//very good function name 
 	dead = "true"
 	ctx.drawImage(restartButtonImage,450,450)
 	ctx.fillStyle = "red"
@@ -1081,6 +1127,7 @@ function updateHealthBar(){
 	count = 0
 	while(count < Player.maxHealth/25){
 		count++
+		//health bar code is pretty simple, just goes checking each heart figuring out what colour it should be. darker = more damage taken
 		if(Player.health - (Player.maxHealth - count * 25) >= 25){
 			ctx.fillStyle = "#DC143C"
 		}else if(Player.health - (Player.maxHealth - count * 25) >= 20){
@@ -1335,6 +1382,7 @@ function mouseMovedFunction(mouseEvent){
 }
 window.addEventListener('click', youClicked)
 function youClicked(mouseEvent){
+	//when you click it checks if you are currently dead and clicking on the restart button and will restart if you do
 	if(dead == "true"){
 		if(mouseX > 450 && mouseX < 750 && mouseY > 450 && mouseY < 550){
 			gameStart()
@@ -1343,6 +1391,7 @@ function youClicked(mouseEvent){
 }
 //monsters 
 class Bitey{
+	//stats for the bitey, some are adjustable that you would think could be constants or variables but are for the miniboss which is just a bigger bitey
 	constructor(biteyX,biteyY,biteyHealth,biteySize,biteyDamage,biteySpeed){
 		this.xPos = biteyX
 		this.yPos = biteyY
@@ -1352,6 +1401,7 @@ class Bitey{
 		this.speed = biteySpeed
 	}
 	moveBitey(){
+		//simple move code unfortunately the enemies often stack up on each other
 		if(this.xPos >= Player.xPos - this.size && this.xPos <= Player.xPos + this.size){
 			if(this.yPos > Player.yPos){
 				this.yPos -= this.speed
@@ -1379,12 +1429,14 @@ class Bitey{
 	}
 }
 class Skeleton{
+	//skeleton stats wowie
 	constructor(skeletonX,skeletonY,skeletonHealth,skeletonCooldown){
 		this.xPos = skeletonX
 		this.yPos = skeletonY
 		this.health = skeletonHealth
 		this.cooldown = skeletonCooldown
 	}
+	//move code again
 	moveSkeleton(){	
 		if(this.xPos >= Player.xPos - skeletonSize && this.xPos <= Player.xPos + skeletonSize){
 			if(this.yPos > Player.yPos){
@@ -1411,6 +1463,7 @@ class Skeleton{
 			}
 		}
 	}
+	//projectile code very good yes
 	throwSkeletonProj(){
 		if(this.cooldown == 0){
 			//will only throw when the projectile will hit the player (if they were to not move once it was thrown)
@@ -1464,7 +1517,9 @@ class TurtleyJr{
 		this.damage = turtleDamage
 		this.direction = turtleDirection
 	}
+	//less simple move code
 	moveTurtle(){
+		//in normal phase it moves with the normal code for movement buuut..
 		if(this.phase == "normal"){
 			this.damage = 5
 			if(this.xPos >= Player.xPos - turtleSize && this.xPos <= Player.xPos + turtleSize){
@@ -1496,6 +1551,7 @@ class TurtleyJr{
 				this.phaseTimer = 200
 			}
 		}else if(this.phase == "spin"){
+			//the spinny phase it will move fast around the room and bounce off walls
 			this.damage = 10
 			if(this.yPos - turtleSize < WALLSIZE){
 				if(this.direction == "upLeft"){
@@ -1541,6 +1597,7 @@ class TurtleyJr{
 				this.phase = "normal"
 			}
 		}else {
+			// the shell phase its just invincible for a certain amount of time idk why i had this but i kinda like it now
 			if(this.phaseTimer == 0){
 				this.phase = "spin"
 				this.phaseTimer = 350
@@ -1563,6 +1620,7 @@ class TurtleyJr{
 	}
 }
 class TurtleySr{
+	//this guy was fun to make 
 	constructor(bigTurtleX,bigTurtleY,bigTurtleHealth,bigTurtlePhase,bigTurtlePhaseTimer,bigTurtleSpeed,bigTurtleDamage,bigTurtleDirection){
 		this.xPos = bigTurtleX
 		this.yPos = bigTurtleY
@@ -1573,6 +1631,7 @@ class TurtleySr{
 		this.damage = bigTurtleDamage
 		this.direction = bigTurtleDirection
 	}
+	//movement code is kinda the same as regular turtley jr but in the shell phase it spawns a bunch of lil turtles and doesnt come out of the shell til you kill them all
 	moveBigTurtle(){
 		if(this.phase == "normal"){
 			this.damage = 5
@@ -1633,7 +1692,7 @@ class TurtleySr{
 				textArray.push(new PopUpText(this.xPos,this.yPos,"Ugh, my back is sore. Children, deal with this hooligan!","white","bold 20px Comic Sans MS",40))
 				random = Math.ceil(Math.random() * 4) + 3
 				while(count < random){
-					turtleArray.push(new TurtleyJr(Math.floor(Math.random() * 800)+200,Math.floor(Math.random() * 500)+200,20+(Math.floor(roomNum/5)*5),"normal",350+Math.floor(Math.random() * 100),1,5,"upLeft"))
+					turtleArray.push(new TurtleyJr(Math.floor(Math.random() * 800)+200,Math.floor(Math.random() * 500)+200,20+(Math.floor(roomNum/5)*5),"normal",150+Math.floor(Math.random() * 100),1,5,"upLeft"))
 					count++
 				}
 			}
@@ -1710,6 +1769,7 @@ class TurtleySr{
 	}
 }
 function drawMonsters(){
+	//draws the monsters with the very high quality top notch sprites i made :)
 	count = 0
 	while(count < biteyArray.length){
 		if(biteyArray[count].size > 20){
@@ -1740,6 +1800,7 @@ function drawMonsters(){
 		ctx.arc(bossArray[0].xPos,bossArray[0].yPos, bossSize, 0, 2*Math.PI)
 		ctx.fill()
 	}
+	//big turtle and little turtles have some animations like when they spin and stuff
 	if(bigTurtleArray.length != 0){
 		if(bigTurtleArray[0].phase == "normal"){
 			if(bigTurtleArray[0].xPos > Player.xPos){
@@ -1810,7 +1871,7 @@ function checkMonsters(){
 		while(count2 < fireballArray.length){
 			if(collisionCheck(biteyArray[count].xPos,biteyArray[count].yPos,biteyArray[count].size,fireballArray[count2].xPos,fireballArray[count2].yPos,fireballArray[count2].size)){
 				if(fireballArray[count2].exploded == "true" && fireballArray[count2].iFrames == 0){
-					fireballArray[count2].iFrames = 15
+					fireballArray[count2].iFrames = 20
 					biteyArray[count].health -= fireballDamage
 				}else {
 					fireballArray[count2].exploded = "true"
@@ -1867,7 +1928,7 @@ function checkMonsters2(){
 		while(count2 < fireballArray.length){
 			if(collisionCheck(skeletonArray[count].xPos,skeletonArray[count].yPos,skeletonSize,fireballArray[count2].xPos,fireballArray[count2].yPos,fireballArray[count2].size)){
 				if(fireballArray[count2].exploded == "true" && fireballArray[count2].iFrames == 0){
-					fireballArray[count2].iFrames = 15
+					fireballArray[count2].iFrames = 20
 					skeletonArray[count].health -= fireballDamage
 				}else {
 					fireballArray[count2].exploded = "true"
@@ -1946,7 +2007,7 @@ function checkTurtles(){
 		while(count2 < fireballArray.length){
 			if(collisionCheck(turtleArray[count].xPos,turtleArray[count].yPos,turtleSize,fireballArray[count2].xPos,fireballArray[count2].yPos,fireballArray[count2].size)){
 				if(fireballArray[count2].exploded == "true" && fireballArray[count2].iFrames == 0){
-					fireballArray[count2].iFrames = 15
+					fireballArray[count2].iFrames = 20
 					if(turtleArray[count].phase == "normal"){
 						turtleArray[count].health -= fireballDamage
 					}else {
@@ -2001,7 +2062,7 @@ function checkBigTurtle(){
 		while(count < fireballArray.length){
 			if(collisionCheck(bigTurtleArray[0].xPos,bigTurtleArray[0].yPos,bigTurtleSize,fireballArray[count].xPos,fireballArray[count].yPos,fireballArray[count].size)){
 				if(fireballArray[count].exploded == "true" && fireballArray[count].iFrames == 0){
-					fireballArray[count].iFrames = 15
+					fireballArray[count].iFrames = 20
 					if(bigTurtleArray[0].phase == "normal"){
 						bigTurtleArray[0].health -= fireballDamage
 					}else {
@@ -2042,6 +2103,11 @@ class BossMonster{
 		this.cycle = bossCycle
 	}
 	moveBoss(){
+		//the phase code is weird
+		//there are kinda 3 phases 
+		//chase where it chases you and shoots 4 things at a time
+		//change which is just when it its moving to the next spot in the bullet phase
+		//bullet where it shows 8 lines where it will attack and then it shoots tons of stuff
 		if(this.phase == "chase"){
 			this.targetX = Player.xPos
 			this.targetY = Player.yPos
@@ -2127,7 +2193,7 @@ class BossMonster{
 	shootBossProj(){
 		if(this.phase == "chase"){
 			if(this.cooldown == 0){
-				if (Math.random() * 2 > 1) {
+				if (this.phaseTimer % 2 == 0) {
 					bossProjArray.push(new BossProj(this.xPos, this.yPos, "up", 8))
 					bossProjArray.push(new BossProj(this.xPos, this.yPos, "left", 8))
 					bossProjArray.push(new BossProj(this.xPos, this.yPos, "down", 8))
@@ -2221,6 +2287,7 @@ class BossProj{
 		}
 	}
 }
+//collision code for the boss and its projectiles
 function checkBoss(){
 	if(collisionCheck(bossArray[0].xPos,bossArray[0].yPos,bossSize,Player.xPos,Player.yPos,PLAYERSIZE) && iFrames == 0){
 		Player.health -= bossContactDamage
@@ -2239,7 +2306,7 @@ function checkBoss(){
 	while(count < fireballArray.length){
 		if(collisionCheck(bossArray[0].xPos,bossArray[0].yPos,bossSize,fireballArray[count].xPos,fireballArray[count].yPos,fireballArray[count].size)){
 			if(fireballArray[count].exploded == "true" && fireballArray[count].iFrames == 0){
-				fireballArray[count].iFrames = 15
+				fireballArray[count].iFrames = 20
 				bossArray[0].health -= fireballDamage
 			}else {
 				fireballArray[count].exploded = "true"
@@ -2282,6 +2349,7 @@ function magicBlast(){
 	magicBlastArray.push(new MagicBlastProjectile(Player.xPos,Player.yPos, facingDirection))
 }
 class MagicBlastProjectile{
+	//very basic projectile it just moves and does damage, nothing special
 	constructor(magicBlastX, magicBlastY, magicBlastDirection){
 		this.xPos = magicBlastX
 		this.yPos = magicBlastY
@@ -2312,12 +2380,13 @@ class MagicBlastProjectile{
 		}
 	}
 }
-//
+//fireball
 function fireball(){
 	fireballTimer = fireballCooldownTime
 	fireballArray.push(new FireballProjectile(Player.xPos,Player.yPos, facingDirection, "false", 6, 60, 0))
 }
 class FireballProjectile{
+	//fireball moves and explodes either when it hits a wall, an enemy, or after like 2 seconds it explodes
 	constructor(fireballX, fireballY, fireballDirection, fireballExploded, fireballSize, fireballTimer, fireballIFrames){
 		this.xPos = fireballX
 		this.yPos = fireballY
@@ -2369,7 +2438,7 @@ class FireballProjectile{
 		}
 	}
 }
-//
+//drawing the spells
 function drawSpells(){
 	count = 0
 	while(count < magicBlastArray.length){
@@ -2387,6 +2456,7 @@ function drawSpells(){
 	}
 
 }
+//spell wall stuff since enemy stuff is in the enemy code
 function checkSpells(){
 	count = 0
 	while(count < magicBlastArray.length){
@@ -2416,11 +2486,16 @@ function checkSpells(){
 		count++
 	}
 }
+//heal spell things
 function healSpell(){
+	//heal spell will summon an aura around you
+	//if you dont get hit for like 5 seconds it will heal you
+	//or if you kill an enemy it will instantly heal you
+	//since thats kinda OP i made it only be usable a certain number of times per room, which you can upgrade
 	if(numMonsters != 0 && roomHeals < roomHealCap){
 		healthCurrent = Player.health
 		killsCurrent = enemyKills
-		healTimer = 750
+		healTimer = 600
 		attemptingHeal = "true"
 		roomHeals++
 	}
@@ -2432,7 +2507,7 @@ function healCheck(){
 	if(Player.health < healthCurrent){
 		attemptingHeal = "false"
 	}
-	if((healTimer < 500 || enemyKills > killsCurrent) & attemptingHeal == "true"){
+	if((healTimer < 350 || enemyKills > killsCurrent) & attemptingHeal == "true"){
 		Player.health += healAmount
 		attemptingHeal = "false"
 	}
@@ -2444,8 +2519,9 @@ function drawDebugInfo(){
 	ctx.fillText(numProjectiles+" projectiles", 1100, 40)
 	ctx.fillText(facingDirection, 1100, 60)
 	ctx.fillText(Player.health+" hp",1100, 700)
-	ctx.fillText((biteyArray.length + skeletonArray.length)+" monsters left",1100,80)
+	ctx.fillText((biteyArray.length + skeletonArray.length + turtleArray.length + bigTurtleArray.length + bossArray.length)+" monsters left",1100,80)
 }
+//should have made this way earlier but i didnt because im dumb
 function collisionCheck(x1,y1,r1,x2,y2,r2){
 	xDist = x1 - x2
 	yDist = y1 - y2
@@ -2456,6 +2532,8 @@ function collisionCheck(x1,y1,r1,x2,y2,r2){
 		return(false)
 	}
 }
+//this was fun and easy to make 
+//basically just lets you do a popup message which is completely customisable and stuff. good for clarity around what upgrades do for you
 class PopUpText{
 	constructor(textX,textY,textString,textColour,textFont,textTime){
 		this.xPos = textX
@@ -2482,3 +2560,4 @@ function drawPopUpText(){
 		count++
 	}
 }
+//thats all i guess, i have very many lines of code my hands hurt help i wrote 900 lines in like 3 days
