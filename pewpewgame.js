@@ -247,7 +247,7 @@ function gameStart(){
 	fireballSpeed = 7
 	fireballExplosionSize = 50
 	fireballDamage = 5
-	fireballUnlocked = "false"
+	fireballUnlocked = "true"
 	healTimer = 0
 	healUnlocked = "false"
 	healAmount = 15
@@ -2127,42 +2127,18 @@ class BossMonster{
 	shootBossProj(){
 		if(this.phase == "chase"){
 			if(this.cooldown == 0){
-				if(this.xPos < Player.xPos + PLAYERSIZE && this.xPos > Player.xPos - PLAYERSIZE){
-					if(this.yPos > Player.yPos){
-						//up
-						bossProjArray.push(new BossProj(this.xPos,this.yPos,"up",5))
-					}else {
-						//down
-						bossProjArray.push(new BossProj(this.xPos,this.yPos,"down",5))
-					}
-				}else if(this.yPos < Player.yPos + PLAYERSIZE && this.yPos > Player.yPos - PLAYERSIZE){
-					if(this.xPos < Player.xPos){
-						//right
-						bossProjArray.push(new BossProj(this.xPos,this.yPos,"right",5))
-					}else {
-						//left
-						bossProjArray.push(new BossProj(this.xPos,this.yPos,"left",5))
-					}
-				}else {
-					if(this.xPos < Player.xPos){
-						if(this.yPos > Player.yPos){
-							//up and right
-							bossProjArray.push(new BossProj(this.xPos,this.yPos,"upRight",5))
-						}else {
-							//down and right
-							bossProjArray.push(new BossProj(this.xPos,this.yPos,"downRight",5))
-						}
-					}else{
-						if(this.yPos > Player.yPos){
-							//up and left
-							bossProjArray.push(new BossProj(this.xPos,this.yPos,"upLeft",5))
-						}else {
-							//down and left
-							bossProjArray.push(new BossProj(this.xPos,this.yPos,"downLeft",5))
-						}
-					}
-				}
-				this.cooldown = 10
+				if (Math.random() * 2 > 1) {
+					bossProjArray.push(new BossProj(this.xPos, this.yPos, "up", 8))
+					bossProjArray.push(new BossProj(this.xPos, this.yPos, "left", 8))
+					bossProjArray.push(new BossProj(this.xPos, this.yPos, "down", 8))
+					bossProjArray.push(new BossProj(this.xPos, this.yPos, "right", 8))
+				} else {
+					bossProjArray.push(new BossProj(this.xPos, this.yPos, "upLeft", 8))
+					bossProjArray.push(new BossProj(this.xPos, this.yPos, "downLeft", 8))
+					bossProjArray.push(new BossProj(this.xPos, this.yPos, "downRight", 8))
+					bossProjArray.push(new BossProj(this.xPos, this.yPos, "upRight", 8))
+                }
+				this.cooldown = 15
 			}else {
 				this.cooldown--
 			}
