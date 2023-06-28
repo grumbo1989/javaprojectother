@@ -1,6 +1,6 @@
 /**
 * title: mystic mausoleum
-* date: 14/04/23
+* date: 29/06/23
 * author: me
 * version: 10.2
 vvv IMPORTANT: 
@@ -16,6 +16,12 @@ const PLAYERSIZE = 25
 const WALLSIZE = 56
 const MAXSPEED = 8
 const SHOPITEMSIZE = 30
+const BOSSSIZE = 60
+const BOSSPROJSIZE = 9
+const REWARDSIZE = 36
+const REWARDPREVIEWSIZE = 30
+const SKELETONSIZE = 15
+const SKELETONPROJSIZE = 6
 //variables (so many :I)
 var ctx
 var upPressed = false
@@ -49,6 +55,7 @@ var numProjectiles = 0
 var maxProjectiles = 500
 var debugInfoOn = 0
 var roomNum = 1
+var numMonsters = 0
 //math stuff
 var count = 0
 var count2 = 0
@@ -62,8 +69,6 @@ var iFrames = 0
 var roomReward
 var doorEntered = "down"
 var loadingScreen = 0
-var rewardSize = 36
-var rewardPreviewSize = 30
 var dead = "true"
 //some enemy kinda stuff
 var coinCount = 0
@@ -95,22 +100,18 @@ var fireballArray = []
 var biteyArray = []
 //skeleton stuff
 var skeletonArray = []
-var skeletonSize = 15
 var skeletonSpeed = 1
 var skeletonContactDamage = 3
 var skeletonProjDamage = 8
 var skeletonProjArray = []
 var skeletonProjSpeed = 5
-var skeletonProjSize = 6
 var skeletonCooldownTimer = 100
 //boss stuff
-var bossSize = 60
 var bossSpeed = 4
-var bossContactDamage = 10
+var bossContactDamage = 9
 var bossProjDamage = 7
 var bossArray = []
 var bossProjArray = []
-var bossProjSize = 9
 //turtle things
 var turtleArray = []
 var turtleSize = 24
@@ -118,7 +119,10 @@ var turtleySrEncountered = "true"
 var bigTurtleSize = 45
 var bigTurtleArray = []
 //images
-
+var playerImage = new Image
+playerImage.src = "player.png"
+var playerDashImage = new Image
+playerDashImage.src = "playerDash.png"
 //upgrades
 var heartUpgradeImage = new Image
 heartUpgradeImage.src = "heartUpgrade.png"
@@ -191,6 +195,8 @@ var minibossImage = new Image
 minibossImage.src = "miniboss.png"
 var bossProjImage = new Image
 bossProjImage.src = "bossProj.png"
+var bossImage = new Image
+bossImage.src = "boss.png"
 //turtley jr
 var turtleImage = new Image
 turtleImage.src = "turtle.png"
@@ -233,7 +239,7 @@ function gameStart(){
 	//resets the game 
 	ctx.textAlign = "center"
 	Player.xPos = 600
-	Player.yPos = 100
+	Player.yPos = 800
 	Player.health = 75
 	Player.maxHealth = 75
 	playerSpeed = 4
@@ -254,7 +260,7 @@ function gameStart(){
 	fireballSpeed = 7
 	fireballExplosionSize = 50
 	fireballDamage = 5
-	fireballUnlocked = "true"
+	fireballUnlocked = "false"
 	healTimer = 0
 	healUnlocked = "false"
 	healAmount = 15
@@ -276,11 +282,25 @@ function gameStart(){
 }
 //update canvas
 function updateCanvas(){
-	
+	ctx.textAlign = "center"
 	ctx.drawImage(backgroundImage,0,0)
 	drawDoors()
 	if(Player.health < 1){
 		youLostLmao()
+	}
+	if(gameStarted == "false"){
+		ctx.drawImage(titleImage,310,240)
+		ctx.font = "bold 40px Papyrus"
+		ctx.fillStyle = "white"
+		ctx.fillText("Click to Start",600,650)
+		dead = "true"
+	}
+	if(roomNum == 1 && numMonsters != 0){
+		ctx.fillStyle = "white"
+		ctx.font = "35px Papyrus"
+		ctx.fillText("H to shoot",600,110)
+		ctx.fillText("WASD to move",600,145)
+		ctx.fillText("Space to dash",600,180)
 	}
 	checkDirection()
 	//progressing timers
@@ -424,11 +444,11 @@ function roomStateCheck(){
 		if(Reward.state == "1"){
 			//when the state is one it will draw the reward and check if you collect it
 			drawRewards()
-			xDist = Player.xPos - (Room.rewardX + rewardSize)
-			yDist = Player.yPos - (Room.rewardY + rewardSize)
+			xDist = Player.xPos - (Room.rewardX + REWARDSIZE)
+			yDist = Player.yPos - (Room.rewardY + REWARDSIZE)
 			trueDist = Math.sqrt(xDist*xDist + yDist*yDist)
 			//i forgot to convert this to the better collision check function but oh well it doenst matter
-			if(trueDist < PLAYERSIZE + rewardSize + 19){
+			if(trueDist < PLAYERSIZE + REWARDSIZE + 19){
 				//when you touch the reward it gives you the stuff from it and generates the rewards for the next rooms
 				grantReward(Reward.variety)
 				Reward.state = "2"
@@ -801,6 +821,8 @@ function generateNewRoom(){
 			shopItemArray.push(new ShopItem(Math.floor(Math.random()*15)+15+Math.floor(roomNum/5)*5, "player","false"))
 		}
 	}else if(Reward.type == "boss"){
+		bossContactDamage++
+		bossProjDamage++
 		bossArray.push(new BossMonster(600,450,roomNum*10,50,"chase",0,0,750,0))
 	}else if(roomNum > 10 && Math.random() * 15 > 13){
 		//after room 10 there is a roughly 1 in 8 chance for a random event to happen
@@ -1098,14 +1120,11 @@ class Player{
 }
 function drawPlayer(){
 	//if your dash is on cooldown you turn blue hmm i wonder what game that is from definitely mine and very original
-	if(dashTimer == "0"){
-		ctx.fillStyle = "#800000"
+	if(dashTimer != 0){
+		ctx.drawImage(playerDashImage,Player.xPos-24,Player.yPos-24)
 	}else{
-		ctx.fillStyle = "#4169E1"
+		ctx.drawImage(playerImage,Player.xPos-24,Player.yPos-24)
 	}
-	ctx.beginPath()
-	ctx.arc(Player.xPos, Player.yPos, PLAYERSIZE, 0, 2*Math.PI)
-	ctx.fill()
 	if(attemptingHeal == "true"){
 		//when the healing thingy is active you get a green circle around you
 		ctx.strokeStyle = "#00FF00"
@@ -1388,6 +1407,10 @@ function youClicked(mouseEvent){
 			gameStart()
 		}
 	}
+	if(gameStarted == "false"){
+		gameStarted = "true"
+		gameStart()
+	}
 }
 //monsters 
 class Bitey{
@@ -1438,13 +1461,13 @@ class Skeleton{
 	}
 	//move code again
 	moveSkeleton(){	
-		if(this.xPos >= Player.xPos - skeletonSize && this.xPos <= Player.xPos + skeletonSize){
+		if(this.xPos >= Player.xPos - SKELETONSIZE && this.xPos <= Player.xPos + SKELETONSIZE){
 			if(this.yPos > Player.yPos){
 				this.yPos -= skeletonSpeed
 			}else if(this.yPos < Player.yPos){
 				this.yPos += skeletonSpeed
 			}
-		}else if(this.yPos >= Player.yPos - skeletonSize && this.yPos <= Player.yPos + skeletonSize){
+		}else if(this.yPos >= Player.yPos - SKELETONSIZE && this.yPos <= Player.yPos + SKELETONSIZE){
 			if(this.xPos > Player.xPos){
 				this.xPos -= skeletonSpeed
 			}else if(this.xPos < Player.xPos){
@@ -1786,19 +1809,16 @@ function drawMonsters(){
 	}
 	count = 0
 	while(count < skeletonProjArray.length){
-		ctx.drawImage(skeletonProjImage,skeletonProjArray[count].xPos-skeletonProjSize,skeletonProjArray[count].yPos-skeletonProjSize)
+		ctx.drawImage(skeletonProjImage,skeletonProjArray[count].xPos-SKELETONPROJSIZE,skeletonProjArray[count].yPos-SKELETONPROJSIZE)
 		count++
 	}
 	count = 0
 	while(count < bossProjArray.length){
-		ctx.drawImage(bossProjImage,bossProjArray[count].xPos-bossProjSize,bossProjArray[count].yPos-bossProjSize)
+		ctx.drawImage(bossProjImage,bossProjArray[count].xPos-BOSSPROJSIZE,bossProjArray[count].yPos-BOSSPROJSIZE)
 		count++
 	}
 	if(bossArray.length != 0){
-		ctx.fillStyle = "#660000"
-		ctx.beginPath()
-		ctx.arc(bossArray[0].xPos,bossArray[0].yPos, bossSize, 0, 2*Math.PI)
-		ctx.fill()
+		ctx.drawImage(bossImage,bossArray[0].xPos-BOSSSIZE,bossArray[0].yPos-BOSSSIZE)
 	}
 	//big turtle and little turtles have some animations like when they spin and stuff
 	if(bigTurtleArray.length != 0){
@@ -1903,7 +1923,7 @@ function checkMonsters(){
 function checkMonsters2(){
 	count = 0
 	while(count < skeletonArray.length){
-		if(collisionCheck(Player.xPos,Player.yPos,PLAYERSIZE,skeletonArray[count].xPos,skeletonArray[count].yPos,skeletonSize) && iFrames == 0){
+		if(collisionCheck(Player.xPos,Player.yPos,PLAYERSIZE,skeletonArray[count].xPos,skeletonArray[count].yPos,SKELETONSIZE) && iFrames == 0){
 			Player.health -= skeletonContactDamage
 			iFrames = 30
 			lastDamageSource = "Skeleton"
@@ -1914,7 +1934,7 @@ function checkMonsters2(){
 	while(count < skeletonArray.length){
 		count2 = 0
 		while(count2 < magicBlastArray.length){
-			if(collisionCheck(skeletonArray[count].xPos,skeletonArray[count].yPos,skeletonSize,magicBlastArray[count2].xPos,magicBlastArray[count2].yPos,magicBlastSize)){
+			if(collisionCheck(skeletonArray[count].xPos,skeletonArray[count].yPos,SKELETONSIZE,magicBlastArray[count2].xPos,magicBlastArray[count2].yPos,magicBlastSize)){
 				skeletonArray[count].health -= magicBlastDamage
 				magicBlastArray.splice(count2, 1)
 			}
@@ -1926,7 +1946,7 @@ function checkMonsters2(){
 	while(count < skeletonArray.length){
 		count2 = 0
 		while(count2 < fireballArray.length){
-			if(collisionCheck(skeletonArray[count].xPos,skeletonArray[count].yPos,skeletonSize,fireballArray[count2].xPos,fireballArray[count2].yPos,fireballArray[count2].size)){
+			if(collisionCheck(skeletonArray[count].xPos,skeletonArray[count].yPos,SKELETONSIZE,fireballArray[count2].xPos,fireballArray[count2].yPos,fireballArray[count2].size)){
 				if(fireballArray[count2].exploded == "true" && fireballArray[count2].iFrames == 0){
 					fireballArray[count2].iFrames = 20
 					skeletonArray[count].health -= fireballDamage
@@ -1959,14 +1979,14 @@ function checkMonsters2(){
 function checkSkeletonProj(){
 	count = 0
 	while(count < skeletonProjArray.length){
-		if(skeletonProjArray[count].xPos + skeletonProjSize > WIDTH - WALLSIZE || skeletonProjArray[count].yPos + skeletonProjSize > HEIGHT - WALLSIZE || skeletonProjArray[count].xPos - skeletonProjSize < 0 + WALLSIZE || skeletonProjArray[count].yPos - skeletonProjSize < 0 + WALLSIZE){
+		if(skeletonProjArray[count].xPos + SKELETONPROJSIZE > WIDTH - WALLSIZE || skeletonProjArray[count].yPos + SKELETONPROJSIZE > HEIGHT - WALLSIZE || skeletonProjArray[count].xPos - SKELETONPROJSIZE < 0 + WALLSIZE || skeletonProjArray[count].yPos - SKELETONPROJSIZE < 0 + WALLSIZE){
 			skeletonProjArray.splice(count,1)
 		}
 		count++
 	}
 	count = 0
 	while(count < skeletonProjArray.length){
-		if(collisionCheck(Player.xPos,Player.yPos,PLAYERSIZE,skeletonProjArray[count].xPos,skeletonProjArray[count].yPos,skeletonProjSize)){
+		if(collisionCheck(Player.xPos,Player.yPos,PLAYERSIZE,skeletonProjArray[count].xPos,skeletonProjArray[count].yPos,SKELETONPROJSIZE)){
 			Player.health -= skeletonProjDamage
 			skeletonProjArray.splice(count, 1)
 			iFrames = 30
@@ -2289,14 +2309,14 @@ class BossProj{
 }
 //collision code for the boss and its projectiles
 function checkBoss(){
-	if(collisionCheck(bossArray[0].xPos,bossArray[0].yPos,bossSize,Player.xPos,Player.yPos,PLAYERSIZE) && iFrames == 0){
+	if(collisionCheck(bossArray[0].xPos,bossArray[0].yPos,BOSSSIZE,Player.xPos,Player.yPos,PLAYERSIZE) && iFrames == 0){
 		Player.health -= bossContactDamage
 		iFrames = 30
 		lastDamageSource = "Witch King"
 	}
 	count = 0
 	while(count < magicBlastArray.length){
-		if(collisionCheck(bossArray[0].xPos,bossArray[0].yPos,bossSize,magicBlastArray[count].xPos,magicBlastArray[count].yPos,magicBlastSize)){
+		if(collisionCheck(bossArray[0].xPos,bossArray[0].yPos,BOSSSIZE,magicBlastArray[count].xPos,magicBlastArray[count].yPos,magicBlastSize)){
 			bossArray[0].health -= magicBlastDamage
 			magicBlastArray.splice(count,1)
 		}
@@ -2304,7 +2324,7 @@ function checkBoss(){
 	}
 	count = 0
 	while(count < fireballArray.length){
-		if(collisionCheck(bossArray[0].xPos,bossArray[0].yPos,bossSize,fireballArray[count].xPos,fireballArray[count].yPos,fireballArray[count].size)){
+		if(collisionCheck(bossArray[0].xPos,bossArray[0].yPos,BOSSSIZE,fireballArray[count].xPos,fireballArray[count].yPos,fireballArray[count].size)){
 			if(fireballArray[count].exploded == "true" && fireballArray[count].iFrames == 0){
 				fireballArray[count].iFrames = 20
 				bossArray[0].health -= fireballDamage
@@ -2320,14 +2340,14 @@ function checkBoss(){
 	}
 	count = 0
 	while(count < bossProjArray.length){
-		if(bossProjArray[count].xPos + bossProjSize > WIDTH - WALLSIZE || bossProjArray[count].yPos + bossProjSize > HEIGHT - WALLSIZE || bossProjArray[count].xPos - bossProjSize < 0 + WALLSIZE || bossProjArray[count].yPos - bossProjSize < 0 + WALLSIZE){
+		if(bossProjArray[count].xPos + BOSSPROJSIZE > WIDTH - WALLSIZE || bossProjArray[count].yPos + BOSSPROJSIZE > HEIGHT - WALLSIZE || bossProjArray[count].xPos - BOSSPROJSIZE < 0 + WALLSIZE || bossProjArray[count].yPos - BOSSPROJSIZE < 0 + WALLSIZE){
 			bossProjArray.splice(count,1)
 		}
 		count++
 	}
 	count = 0
 	while(count < bossProjArray.length){
-		if(collisionCheck(Player.xPos,Player.yPos,PLAYERSIZE,bossProjArray[count].xPos,bossProjArray[count].yPos,bossProjSize)){
+		if(collisionCheck(Player.xPos,Player.yPos,PLAYERSIZE,bossProjArray[count].xPos,bossProjArray[count].yPos,BOSSPROJSIZE)){
 			Player.health -= bossProjDamage
 			bossProjArray.splice(count, 1)
 			iFrames = 30
